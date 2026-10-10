@@ -483,21 +483,26 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .page-intro-row .button { min-height: 37px; gap: 6px; padding-inline: 10px; font-size: 10px; }
   .page-intro-row .intro-copy { max-width: 330px; }
   .demo-note { padding: 11px; }
-  .demo-note p { font-size: 10px; }
+  .demo-note p { font-size: 12px; }
   .flour-catalog-grid { gap: 8px; }
   .flour-card { padding: 13px 11px 11px; }
   .flour-card-top { margin-bottom: 11px; }
-  .flour-card h3 { font-size: 15px; }
-  .flour-brand, .flour-notes { font-size: 9px; }
-  .flour-properties { gap: 4px; font-size: 9px; }
-  .flour-properties small { font-size: 7px; }
+  .flour-card h3 { font-size: 16px; }
+  .flour-brand, .flour-notes { font-size: 11px; }
+  .flour-properties { gap: 5px; font-size: 11px; }
+  .flour-properties small { font-size: 9px; }
   .catalogue-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 11px; }
   .catalogue-search { grid-column: 1 / -1; }
-  .catalogue-filters .field > span { font-size: 9px; }
-  .official-tag { font-size: 7px; }
-  .official-properties { flex-direction: column; gap: 8px; }
+  .catalogue-filters .field > span { font-size: 11px; }
+  .catalogue-filters .field input, .catalogue-filters .field select { font-size: 16px; }
+  .catalogue-result-count, .official-verification, .official-spec-details, .prepared-mix-warning, .official-source-link { font-size: 11px; }
+  .official-tag { font-size: 8px; }
+  .official-properties { flex-direction: column; gap: 8px; font-size: 12px; }
   .official-properties > span { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; width: 100%; }
-  .official-properties small { margin-bottom: 0; font-size: 8px; }
+  .official-properties small { margin-bottom: 0; font-size: 10px; }
+  .official-spec-details summary, .official-archive > summary { font-size: 12px; }
+  .official-archive-row strong { font-size: 12px; }
+  .official-archive-row span { font-size: 11px; }
   .custom-flour-row { flex-wrap: wrap; gap: 9px; padding: 10px 0; }
   .custom-flour-icon { width: 32px; height: 32px; }
   .custom-flour-info { min-width: 0; flex: 1; }
@@ -505,7 +510,9 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .custom-flour-actions { order: 4; margin-left: 0; }
   .flour-form-section { padding: 16px 13px; }
   .flour-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 9px; }
-  .field input, .field select, .field textarea { font-size: 10px; }
+  .field input, .field select, .field textarea { font-size: 16px; }
+  .field > span, .field-label { font-size: 11px; }
+  .field > span small { font-size: 10px; }
   .form-bottom { align-items: end; flex-wrap: wrap; }
   .form-bottom .button { margin-left: auto; }
   .recipe-card { grid-template-columns: 38px minmax(0,1fr); gap: 10px; padding: 13px; }
@@ -520,19 +527,23 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .builder-heading { align-items: start; flex-direction: column; gap: 13px; }
   .builder-heading h1 { font-size: 32px; }
   .save-field { width: 100%; flex-basis: auto; }
-  .save-field .button { min-height: 39px; padding-inline: 11px; font-size: 10px; }
+  .save-field .button { min-height: 39px; padding-inline: 11px; font-size: 12px; }
   .builder-layout { display: flex; flex-direction: column; gap: 10px; }
   .result-panel { position: static; order: -1; width: 100%; padding: 16px 15px 13px; }
   .result-total > strong { font-size: 33px; }
+  .result-total > span { font-size: 12px; }
+  .ingredient-row { font-size: 11px; }
+  .ingredient-row strong small { font-size: 10px; }
+  .mass-note, .rounding-note { font-size: 10px; }
   .builder-form { width: 100%; }
   .form-section { padding-block: 19px; }
   .field-row { gap: 9px; }
   .form-section-heading { margin-bottom: 15px; }
   .form-section-heading h2 { font-size: 18px; }
-  .form-section-heading p { font-size: 9px; }
-  .segmented-control button { padding-inline: 5px; font-size: 9px; }
+  .form-section-heading p { font-size: 11px; }
+  .segmented-control button { padding-inline: 5px; font-size: 11px; }
   .pan-panel { padding: 11px; gap: 11px 8px; }
-  .shape-toggle button { font-size: 8px; }
+  .shape-toggle button { font-size: 10px; }
   .density-field .field-label { line-height: 1.4; }
   .blend-percentage { width: 83px; }
   .blend-row { gap: 5px; }
@@ -546,6 +557,11 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .phase-duration-inputs { max-width: 180px; }
   .phase-notes-field, .phase-measured-temp, .phase-time-caption { margin-left: 0; }
   .manual-dose-row { max-width: 100%; }
+  .timeline-phase-heading > strong { font-size: 10px; }
+  .timeline-meta, .timeline-temperature { font-size: 9px; }
+  .timeline-note { font-size: 10px; }
+  .fermentation-timeline.compact .timeline-phase-heading > strong { font-size: 9px; }
+  .fermentation-timeline.compact .timeline-meta { font-size: 8px; }
   .backup-actions { justify-content: start; }
   .feedback-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 9px; }
   .feedback-form-section { padding: 17px 0; }
