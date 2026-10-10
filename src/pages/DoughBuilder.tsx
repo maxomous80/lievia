@@ -9,8 +9,9 @@ import { FermentationTimeline } from '../components/FermentationTimeline'
 import { createDefaultFermentationConfig, formatDuration, formatItalianDateTime, STRATEGY_LABELS } from '../domain/fermentation/schedule'
 import { getFlourGuidance, getTemperatureGuidance } from '../domain/fermentation/guidance'
 import { YEAST_ESTIMATOR_MODEL } from '../domain/fermentation/modelConfiguration'
+import { deriveBlendPropertyRanges, isFlourBlendEligible, type NumericRange } from '../domain/flours/blendProperties'
 import type { FermentationConfig } from '../domain/fermentation/types'
-import type { Flour, RecipeDraft } from '../models'
+import type { RecipeDraft } from '../models'
 
 const grams = new Intl.NumberFormat('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const yeastGrams = new Intl.NumberFormat('it-IT', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
@@ -30,10 +31,17 @@ function weightForArea(draft: RecipeDraft, shape: 'rect' | 'round') {
   return areaCm2 / 10_000 * draft.doughWeightPerArea
 }
 
-function blendEstimate(blend: RecipeDraft['flourBlend'], flours: Flour[], key: 'strengthW' | 'plRatio' | 'proteinPct') {
-  const rows = blend.map((item) => ({ item, flour: flours.find((flour) => flour.id === item.flourId) }))
-  if (!rows.length || rows.some(({ flour }) => flour?.[key] === undefined)) return undefined
-  return rows.reduce((total, { item, flour }) => total + item.percentage * (flour?.[key] ?? 0) / 100, 0)
+function formatRange(range: NumericRange | undefined, digits: number) {
+  if (!range) return 'n.d.'
+  const format = (value: number) => new Intl.NumberFormat('it-IT', { maximumFractionDigits: digits }).format(value)
+  return range.min === range.max ? `≈ ${format(range.min)}` : `≈ ${format(range.min)}–${format(range.max)}`
+}
+
+function flourKindSuffix(flour: { productKind?: string; isDemo: boolean }) {
+  if (flour.isDemo) return ' · demo'
+  if (flour.productKind === 'commercial-blend') return ' · miscela commerciale'
+  if (flour.productKind === 'prepared-mix') return ' · preparato non calcolabile come farina'
+  return ''
 }
 
 function IngredientRow({ label, amount, percentage, yeast = false }: { label: string; amount: number; percentage: number; yeast?: boolean }) {
@@ -111,7 +119,7 @@ export function DoughBuilder() {
   }
 
   function addFlour() {
-    const nextFlour = flourCatalog.find((flour) => !draft.flourBlend.some((item) => item.flourId === flour.id))
+    const nextFlour = flourCatalog.find((flour) => isFlourBlendEligible(flour) && !draft.flourBlend.some((item) => item.flourId === flour.id))
     if (!nextFlour) return
     const existingTotal = draft.flourBlend.reduce((sum, item) => sum + item.percentage, 0)
     const blend = existingTotal > 0
@@ -152,11 +160,17 @@ export function DoughBuilder() {
   }
 
   const blendTotal = draft.flourBlend.reduce((sum, item) => sum + item.percentage, 0)
-  const estimatedW = blendEstimate(draft.flourBlend, flourCatalog, 'strengthW')
-  const estimatedPl = blendEstimate(draft.flourBlend, flourCatalog, 'plRatio')
-  const estimatedProtein = blendEstimate(draft.flourBlend, flourCatalog, 'proteinPct')
+  const blendEligibleFlours = flourCatalog.filter(isFlourBlendEligible)
+  const blendRanges = deriveBlendPropertyRanges(draft.flourBlend, flourCatalog)
   const areaHint = Number.isFinite(computedAreaWeight) && computedAreaWeight > 0 ? grams.format(computedAreaWeight) : '—'
-  const guidanceFlours = flourCatalog.map((flour) => ({ id: flour.id, name: flour.name, strengthW: flour.strengthW, proteinPct: flour.proteinPct, isDemo: flour.isDemo }))
+  const guidanceFlours = flourCatalog.map((flour) => ({
+    id: flour.id,
+    name: flour.name,
+    strengthW: flour.officialSource ? undefined : flour.strengthW,
+    strengthWRange: flour.officialSource ? { min: flour.officialSource.wMin, max: flour.officialSource.wMax } : undefined,
+    proteinPct: flour.officialSource ? flour.officialSource.proteinPercent ?? undefined : flour.proteinPct,
+    isDemo: flour.isDemo,
+  }))
   const guidanceInput = { blend: draft.flourBlend, flours: guidanceFlours, durationMinutes: fermentation.totalDurationMinutes, hydrationPct: draft.hydrationPct, style: draft.style }
 
   function printRecipe() {
@@ -189,10 +203,11 @@ export function DoughBuilder() {
           </section>
 
           <section className="form-section"><div className="form-section-heading"><span className="step-index">02</span><div><h2>La miscela di farine</h2><p>Distribuisci le percentuali della farina totale.</p></div></div>
-            <div className="blend-list">{draft.flourBlend.map((item, index) => <div className="blend-row" key={`${index}-${item.flourId}`}><label className="field blend-flour-select"><span>{index === 0 ? 'Farina' : `Farina ${index + 1}`}</span><select value={item.flourId} onChange={(event) => { const next = [...draft.flourBlend]; next[index] = { ...item, flourId: event.target.value }; update('flourBlend', next) }}><option value="">Seleziona una farina</option>{flourCatalog.map((flour) => <option value={flour.id} key={flour.id}>{flour.name}{flour.isDemo ? ' · demo' : ''}</option>)}</select></label><label className="field blend-percentage"><span>Percentuale</span><div className="input-with-unit"><input type="number" min="0" max="100" step="0.1" value={item.percentage} onChange={(event) => { const next = [...draft.flourBlend]; next[index] = { ...item, percentage: Number(event.target.value) }; update('flourBlend', next) }} /><small>%</small></div></label>{draft.flourBlend.length > 1 && <button type="button" className="icon-button blend-remove" title="Rimuovi farina" aria-label="Rimuovi farina" onClick={() => removeFlour(index)}><Trash2 size={16} /></button>}</div>)}</div>
+            <div className="blend-list">{draft.flourBlend.map((item, index) => <div className="blend-row" key={`${index}-${item.flourId}`}><label className="field blend-flour-select"><span>{index === 0 ? 'Farina' : `Farina ${index + 1}`}</span><select value={item.flourId} onChange={(event) => { const next = [...draft.flourBlend]; next[index] = { ...item, flourId: event.target.value }; update('flourBlend', next) }}><option value="">Seleziona una farina</option>{flourCatalog.map((flour) => <option value={flour.id} key={flour.id} disabled={!isFlourBlendEligible(flour)}>{flour.brand} · {flour.name}{flourKindSuffix(flour)}</option>)}</select></label><label className="field blend-percentage"><span>Percentuale</span><div className="input-with-unit"><input type="number" min="0" max="100" step="0.1" value={item.percentage} onChange={(event) => { const next = [...draft.flourBlend]; next[index] = { ...item, percentage: Number(event.target.value) }; update('flourBlend', next) }} /><small>%</small></div></label>{draft.flourBlend.length > 1 && <button type="button" className="icon-button blend-remove" title="Rimuovi farina" aria-label="Rimuovi farina" onClick={() => removeFlour(index)}><Trash2 size={16} /></button>}</div>)}</div>
+            {flourCatalog.some((flour) => flour.productKind === 'prepared-mix') && <p className="prepared-mix-warning">I preparati con ingredienti aggiunti restano consultabili nel catalogo ma non sono selezionabili come farina: le loro proporzioni interne non sono disponibili per il calcolo.</p>}
             <div className={`blend-total${Math.abs(blendTotal - 100) < 1e-6 ? ' valid' : ' invalid'}`}><span>Totale miscela</span><strong>{new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 }).format(blendTotal)}%</strong><small>{Math.abs(blendTotal - 100) < 1e-6 ? 'Composizione completa' : 'Il totale deve essere 100%'}</small></div>
-            {draft.flourBlend.length < flourCatalog.length && <button type="button" className="text-link add-flour-button" onClick={addFlour}><Plus size={15} /> Aggiungi un’altra farina</button>}
-            <div className="blend-estimates"><div className="estimate-heading"><span>PROPRIETÀ STIMATE DELLA MISCELA</span><span title="Stime ponderate dei dati inseriti" aria-label="Stime ponderate dei dati inseriti"><CircleHelp size={15} /></span></div><div className="estimate-values"><div><small>W</small><strong>{estimatedW === undefined ? 'n.d.' : `≈ ${new Intl.NumberFormat('it-IT', { maximumFractionDigits: 0 }).format(estimatedW)}`}</strong></div><div><small>P/L</small><strong>{estimatedPl === undefined ? 'n.d.' : `≈ ${new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 }).format(estimatedPl)}`}</strong></div><div><small>Proteine</small><strong>{estimatedProtein === undefined ? 'n.d.' : `≈ ${new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 }).format(estimatedProtein)}%`}</strong></div></div><p>W e P/L ponderati sono stime indicative, non misurazioni di laboratorio. I valori si mostrano solo se presenti su tutte le farine selezionate.</p></div>
+            {draft.flourBlend.length < blendEligibleFlours.length && <button type="button" className="text-link add-flour-button" onClick={addFlour}><Plus size={15} /> Aggiungi un’altra farina</button>}
+            <div className="blend-estimates"><div className="estimate-heading"><span>SCENARIO ARITMETICO DELLA MISCELA</span><span title="Intervalli pesati dei dati dichiarati" aria-label="Intervalli pesati dei dati dichiarati"><CircleHelp size={15} /></span></div><div className="estimate-values"><div><small>W · scenario</small><strong>{formatRange(blendRanges.w, 0)}</strong></div><div><small>P/L · scenario</small><strong>{formatRange(blendRanges.pl, 2)}</strong></div><div><small>Proteine</small><strong>{blendRanges.protein ? `${formatRange(blendRanges.protein, 1)}%` : 'n.d.'}</strong></div></div><p>Range calcolati pesando i dati dichiarati; W e P/L non sono lineari nelle miscele. Non sono misurazioni di laboratorio né previsioni delle proprietà dell’impasto.</p></div>
           </section>
 
           <section className="form-section"><div className="form-section-heading"><span className="step-index">03</span><div><h2>Idratazione e condimento</h2><p>I valori iniziali cambiano con lo stile e restano sempre modificabili.</p></div></div>
@@ -224,7 +239,7 @@ export function DoughBuilder() {
 
         <aside className="result-panel"><div className="result-panel-heading"><div><p className="eyebrow">IL TUO IMPASTO</p><h2>Le dosi</h2></div><span className="result-live"><i /> LIVE</span></div>
           {result ? <><div className="result-total"><span>Peso totale</span><strong>{grams.format(result.totalDoughWeight)}<small>g</small></strong><p>{draft.useTotalWeight || useAreaWeight ? 'peso totale desiderato' : `${draft.ballCount} palline da ${draft.ballWeight} g`}</p></div>
-            <div className="ingredient-group"><div className="ingredient-group-title"><Wheat size={15} /><span>FARINE</span></div>{result.flourQuantities.map((item, index) => { const flour = flourCatalog.find((candidate) => candidate.id === item.flourId); return <IngredientRow key={`${item.flourId}-${index}`} label={flour?.name ?? 'Farina non disponibile'} amount={item.weight} percentage={item.percentage} /> })}<div className="ingredient-row ingredient-subtotal"><span>Farina totale</span><strong>{grams.format(result.flourWeight)} <small>g</small></strong><em>100%</em></div></div>
+            <div className="ingredient-group"><div className="ingredient-group-title"><Wheat size={15} /><span>FARINE</span></div>{result.flourQuantities.map((item, index) => { const flour = flourCatalog.find((candidate) => candidate.id === item.flourId); return <IngredientRow key={`${item.flourId}-${index}`} label={flour ? `${flour.brand} · ${flour.name}` : 'Farina non disponibile'} amount={item.weight} percentage={item.percentage} /> })}<div className="ingredient-row ingredient-subtotal"><span>Farina totale</span><strong>{grams.format(result.flourWeight)} <small>g</small></strong><em>100%</em></div></div>
             <div className="ingredient-group"><div className="ingredient-group-title"><Scale size={15} /><span>INGREDIENTI</span></div><IngredientRow label="Acqua" amount={result.waterWeight} percentage={result.bakerPercentages.water} /><IngredientRow label="Sale" amount={result.saltWeight} percentage={result.bakerPercentages.salt} /><IngredientRow label="Olio" amount={result.oilWeight} percentage={result.bakerPercentages.oil} /><IngredientRow label={draft.yeastType === 'fresh' ? 'Lievito fresco' : draft.yeastType === 'instant-dry' ? 'Lievito secco istantaneo' : 'Lievito secco attivo'} amount={result.yeastWeight} percentage={result.bakerPercentages.yeast} yeast /><IngredientRow label="Malto" amount={result.maltWeight} percentage={result.bakerPercentages.malt} /><IngredientRow label="Zucchero" amount={result.sugarWeight} percentage={result.bakerPercentages.sugar} /></div>
             <div className="mass-note"><Check size={14} /><span>Bilancio completo · pesi calcolati con precisione interna</span></div>
               <section className="result-fermentation"><div className="result-fermentation-heading"><div><p className="eyebrow">IL PIANO</p><h3>Lievitazione</h3></div><button type="button" className="text-link" onClick={() => document.querySelector('#fermentation-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Modifica piano</button></div>
@@ -242,7 +257,7 @@ export function DoughBuilder() {
       <section className="print-recipe" aria-label="Ricetta completa per la stampa">
         <p className="eyebrow">LIEVIA · THE SCIENCE OF DOUGH</p><h1>{draft.name || 'Ricetta senza nome'}</h1>
         <p>{draft.style} · {formatDuration(fermentation.totalDurationMinutes)} · {STRATEGY_LABELS[fermentation.strategy]}</p>
-        {result && <div className="print-ingredients"><h2>Ingredienti · {grams.format(result.totalDoughWeight)} g</h2><ul>{result.flourQuantities.map((item, index) => <li key={`${item.flourId}-${index}`}>{flourCatalog.find((flour) => flour.id === item.flourId)?.name ?? 'Farina'}: {grams.format(item.weight)} g ({item.percentage}%)</li>)}<li>Acqua: {grams.format(result.waterWeight)} g</li><li>Sale: {grams.format(result.saltWeight)} g</li><li>Olio: {grams.format(result.oilWeight)} g</li><li>Lievito: {yeastGrams.format(result.yeastWeight)} g ({draft.yeastPct}% farina, {fermentation.yeastMode})</li>{result.maltWeight > 0 && <li>Malto: {grams.format(result.maltWeight)} g</li>}{result.sugarWeight > 0 && <li>Zucchero: {grams.format(result.sugarWeight)} g</li>}</ul></div>}
+        {result && <div className="print-ingredients"><h2>Ingredienti · {grams.format(result.totalDoughWeight)} g</h2><ul>{result.flourQuantities.map((item, index) => { const flour = flourCatalog.find(({ id }) => id === item.flourId); return <li key={`${item.flourId}-${index}`}>{flour ? `${flour.brand} · ${flour.name}` : 'Farina'}: {grams.format(item.weight)} g ({item.percentage}%)</li> })}<li>Acqua: {grams.format(result.waterWeight)} g</li><li>Sale: {grams.format(result.saltWeight)} g</li><li>Olio: {grams.format(result.oilWeight)} g</li><li>Lievito: {yeastGrams.format(result.yeastWeight)} g ({draft.yeastPct}% farina, {fermentation.yeastMode})</li>{result.maltWeight > 0 && <li>Malto: {grams.format(result.maltWeight)} g</li>}{result.sugarWeight > 0 && <li>Zucchero: {grams.format(result.sugarWeight)} g</li>}</ul></div>}
         <h2>Fasi · {formatItalianDateTime(fermentation.plannedStartAt)} – {formatItalianDateTime(fermentation.bakingAt)}</h2><FermentationTimeline config={fermentation} />
         <p>Ambiente {fermentation.ambientTemperatureC} °C · Impasto misurato {fermentation.measuredDoughTemperatureC ?? 'non indicato'} °C · Frigorifero {fermentation.refrigeratorTemperatureC} °C</p>
         {fermentationWarnings.map((warning) => <p key={warning}>{warning}</p>)}

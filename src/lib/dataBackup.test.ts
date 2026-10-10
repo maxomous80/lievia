@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultDraft } from '../data/defaults'
 import type { DoughOutcome } from '../domain/feedback/outcomes'
 import { createDefaultEstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
+import { OFFICIAL_FLOURS } from '../data/officialFlours'
 import type { Recipe } from '../models'
 import { mergeBackup, serializeBackup, type BackupData } from './dataBackup'
 
@@ -56,6 +57,12 @@ describe('backup Lievia', () => {
   it('rifiuta JSON non valido e strutture di backup malformate', () => {
     expect(() => mergeBackup('{', empty)).toThrow(/JSON valido/)
     expect(() => mergeBackup('{"format":"lievia-backup","version":1}', empty)).toThrow(/backup Lievia valido/)
+  })
+
+  it('non accetta prodotti seed ufficiali nel blocco delle farine personali', () => {
+    const backup = JSON.parse(serializeBackup(empty)) as Record<string, unknown>
+    backup.customFlours = [OFFICIAL_FLOURS[0]]
+    expect(() => mergeBackup(JSON.stringify(backup), empty)).toThrow(/backup Lievia valido/)
   })
 
   it('esporta e reimporta gli esiti versionati e rifiuta record non validi', () => {

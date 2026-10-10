@@ -40,7 +40,8 @@ export function getFlourGuidance(input: FlourGuidanceInput): FermentationWarning
     flour: input.flours.find((flour) => flour.id === item.flourId),
   })).filter(({ item }) => item.percentage > 0)
   const unknown = selected.filter(({ flour }) => !flour)
-  const withoutW = selected.filter(({ flour }) => flour?.strengthW === undefined)
+  const withoutW = selected.filter(({ flour }) => flour?.strengthW === undefined &&
+    (flour?.strengthWRange?.min == null || flour.strengthWRange.max == null))
   const withoutProtein = selected.filter(({ flour }) => flour?.proteinPct === undefined)
   if (unknown.length || withoutW.length || withoutProtein.length) {
     warnings.push({
@@ -49,7 +50,7 @@ export function getFlourGuidance(input: FlourGuidanceInput): FermentationWarning
       basis: 'dati farina inseriti',
     })
   }
-  const measuredW = selected.every(({ flour }) => flour?.strengthW !== undefined)
+  const measuredW = selected.every(({ flour }) => flour?.strengthW !== undefined && flour.strengthWRange === undefined)
     ? selected.reduce((total, { item, flour }) => total + item.percentage * (flour?.strengthW ?? 0) / 100, 0)
     : undefined
   if (measuredW !== undefined && measuredW < 200 && input.durationMinutes > 24 * 60) {

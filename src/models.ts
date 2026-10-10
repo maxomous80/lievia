@@ -10,6 +10,31 @@ export type PizzaStyle =
   | 'personalizzato'
 
 export type YeastType = 'fresh' | 'instant-dry' | 'active-dry'
+export type FlourProductKind = 'flour' | 'commercial-blend' | 'prepared-mix'
+
+export interface OfficialFlourSourceRecord {
+  id: string
+  brand: string
+  name: string
+  flourType: string | null
+  wMin: number | null
+  wMax: number | null
+  plMin: number | null
+  plMax: number | null
+  proteinPercent: number | null
+  farinographAbsorptionPercent: number | null
+  waterAbsorptionPercent: number | null
+  source: { type: string; url: string; checkedOn?: string; accessed?: string }
+  notes: string | null
+  qualityFlags?: string[]
+  verifiedFields?: string[]
+  productKind: FlourProductKind
+  isArchived: boolean
+  productIdentity: string
+  catalogueSchemaVersion: string | number
+  originalRecord: Record<string, unknown>
+  imageUrl?: string
+}
 
 export interface Flour {
   id: string
@@ -22,6 +47,8 @@ export interface Flour {
   hydrationNotes: string
   technicalDataSource?: string
   isDemo: boolean
+  officialSource?: OfficialFlourSourceRecord
+  productKind?: FlourProductKind
 }
 
 export interface FlourBlendItem {

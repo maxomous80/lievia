@@ -111,7 +111,7 @@ function isRecipeShape(value: unknown): value is Recipe {
 
 function isCustomFlour(value: unknown): value is Flour {
   if (!isRecord(value)) return false
-  return value.isDemo === false && typeof value.id === 'string' && typeof value.brand === 'string' &&
+  return value.isDemo === false && value.officialSource === undefined && typeof value.id === 'string' && typeof value.brand === 'string' &&
     typeof value.name === 'string' && typeof value.flourType === 'string' && typeof value.hydrationNotes === 'string' &&
     ['strengthW', 'plRatio', 'proteinPct'].every((key) => value[key] === undefined ||
       typeof value[key] === 'number' && Number.isFinite(value[key]) && value[key] >= 0) &&

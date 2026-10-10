@@ -53,6 +53,7 @@ export interface FlourGuidanceInput {
     id: string
     name: string
     strengthW?: number
+    strengthWRange?: { min: number | null; max: number | null }
     proteinPct?: number
     isDemo?: boolean
   }>

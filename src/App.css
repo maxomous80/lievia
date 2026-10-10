@@ -98,6 +98,39 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .flour-notes { min-height: 43px; margin: 0; color: #696b61; font-size: 10px; line-height: 1.55; }
 .flour-properties { display: flex; justify-content: space-between; gap: 7px; margin-top: 14px; padding-top: 10px; border-top: 1px solid #e8e3d8; color: #8a8a7f; font-size: 10px; }
 .flour-properties small, .custom-flour-values small { display: block; margin-bottom: 3px; color: #9a8f7f; font-size: 8px; }
+.catalogue-filters { display: grid; grid-template-columns: minmax(190px, 1.4fr) repeat(2, minmax(125px, .8fr)) repeat(2, minmax(145px, 1fr)); gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 4px; background: rgba(251,249,243,.72); }
+.catalogue-filters .field { gap: 6px; }
+.catalogue-search-input { position: relative; display: flex; align-items: center; }
+.catalogue-search-input svg { position: absolute; left: 9px; color: var(--muted); pointer-events: none; }
+.catalogue-search-input input { padding-left: 31px !important; }
+.catalogue-range-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.catalogue-range-inputs input { min-width: 0; }
+.catalogue-result-count { margin: -4px 0 0; color: var(--muted); font-size: 10px; }
+.official-flour-card { display: flex; flex-direction: column; }
+.official-tag { display: inline-flex; align-items: center; gap: 4px; color: #526c55; font-size: 8px; font-weight: 700; letter-spacing: .45px; }
+.official-flour-card .flour-brand { min-height: 15px; }
+.official-properties { align-items: start; color: var(--ink); font-size: 11px; }
+.official-properties > span { min-width: 0; }
+.official-verification { margin: 11px 0 0; color: #6c7564; font-size: 9px; line-height: 1.5; }
+.official-spec-details { margin-top: 12px; border-top: 1px solid var(--line); color: #66685f; font-size: 10px; }
+.official-spec-details summary { padding: 10px 0 7px; color: var(--sage-dark); cursor: pointer; font-weight: 650; }
+.official-spec-details dl { display: grid; gap: 5px; margin: 2px 0 8px; }
+.official-spec-details dl > div { display: flex; justify-content: space-between; gap: 10px; }
+.official-spec-details dt { color: var(--muted); }
+.official-spec-details dd { margin: 0; text-align: right; }
+.official-spec-details p { margin: 7px 0; line-height: 1.5; }
+.quality-flag { color: #995c38; }
+.official-source-link { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-top: auto; padding-top: 12px; color: var(--terracotta-dark); font-size: 10px; font-weight: 650; }
+.official-source-link:hover { text-decoration: underline; }
+.official-flour-image { width: 100%; max-height: 150px; object-fit: contain; }
+.prepared-mix-warning { margin: 10px 0 0; padding: 9px 10px; border-left: 2px solid #b77c60; color: #76553f; background: #f5eee6; font-size: 9px; line-height: 1.5; }
+.official-archive { padding: 13px 15px; border: 1px solid #d7c8b8; border-radius: 4px; background: #f2eee7; }
+.official-archive > summary { display: flex; align-items: center; gap: 7px; color: #785f4d; cursor: pointer; font-size: 11px; font-weight: 700; }
+.official-archive-list { display: grid; gap: 8px; margin-top: 12px; }
+.official-archive-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 11px; border-top: 1px solid #dcd2c6; }
+.official-archive-row > div { display: grid; gap: 4px; }
+.official-archive-row strong { color: #625346; font-size: 11px; }
+.official-archive-row span { color: #756b60; font-size: 9px; line-height: 1.4; }
 .custom-flour-list { border-top: 1px solid var(--line); }
 .custom-flour-row { display: flex; min-height: 68px; align-items: center; gap: 13px; border-bottom: 1px solid var(--line); }
 .custom-flour-icon { display: grid; width: 37px; height: 37px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--sage-dark); background: var(--sage-soft); }
@@ -458,6 +491,13 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .flour-brand, .flour-notes { font-size: 9px; }
   .flour-properties { gap: 4px; font-size: 9px; }
   .flour-properties small { font-size: 7px; }
+  .catalogue-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 11px; }
+  .catalogue-search { grid-column: 1 / -1; }
+  .catalogue-filters .field > span { font-size: 9px; }
+  .official-tag { font-size: 7px; }
+  .official-properties { flex-direction: column; gap: 8px; }
+  .official-properties > span { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; width: 100%; }
+  .official-properties small { margin-bottom: 0; font-size: 8px; }
   .custom-flour-row { flex-wrap: wrap; gap: 9px; padding: 10px 0; }
   .custom-flour-icon { width: 32px; height: 32px; }
   .custom-flour-info { min-width: 0; flex: 1; }

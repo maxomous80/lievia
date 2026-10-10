@@ -34,6 +34,19 @@ describe('calculateDough', () => {
     expect(result.flourQuantities.map(({ percentage }) => percentage)).toEqual([70, 30])
   })
 
+  it('calcola una miscela con un ID commerciale e uno personalizzato mantenendo il bilancio', () => {
+    const result = calculateDough({
+      ...baseInput,
+      flourBlend: [
+        { flourId: 'official:official-001', percentage: 70 },
+        { flourId: 'custom-local-1', percentage: 30 },
+      ],
+    })
+    expect(result.flourQuantities.map(({ flourId }) => flourId)).toEqual(['official:official-001', 'custom-local-1'])
+    expect(result.flourQuantities.reduce((sum, item) => sum + item.weight, 0)).toBeCloseTo(result.flourWeight)
+    expect(result.totalDoughWeight).toBeCloseTo(1000)
+  })
+
   it('conserva la massa totale anche usando peso totale diretto', () => {
     const result = calculateDough({
       ...baseInput,

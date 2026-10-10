@@ -1,0 +1,569 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogue": "Lievia official-sources starter flour catalogue",
+  "lastReviewed": "2026-10-10",
+  "licenseNotice": "Compiled factual attributes from individual public manufacturer product pages. No images, copied descriptions, or proprietary databases included. Check original source and usage rights before redistribution.",
+  "rules": {
+    "missing": "null means not declared/verified, never zero",
+    "ranges": "manufacturer ranges preserved; no invented midpoints",
+    "blend": "W and P/L are not necessarily linear in blends",
+    "source": "manufacturer page for each entry"
+  },
+  "flours": [
+    {
+      "id": "official-001",
+      "brand": "Mulino Caputo",
+      "name": "Pizzeria",
+      "flourType": "00",
+      "wMin": 260,
+      "wMax": 280,
+      "plMin": 0.5,
+      "plMax": 0.6,
+      "proteinPercent": 12.5,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/pizzeria/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-002",
+      "brand": "Mulino Caputo",
+      "name": "Nuvola",
+      "flourType": "0",
+      "wMin": 270,
+      "wMax": 290,
+      "plMin": 0.5,
+      "plMax": 0.6,
+      "proteinPercent": 12.5,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/nuvola/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-003",
+      "brand": "Mulino Caputo",
+      "name": "Nuvola Super",
+      "flourType": "0",
+      "wMin": 320,
+      "wMax": 340,
+      "plMin": 0.5,
+      "plMax": 0.6,
+      "proteinPercent": 13.5,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/nuvola-super/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-004",
+      "brand": "Mulino Caputo",
+      "name": "Aria",
+      "flourType": "0",
+      "wMin": 300,
+      "wMax": 320,
+      "plMin": 0.5,
+      "plMax": 0.6,
+      "proteinPercent": 13,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/aria/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-005",
+      "brand": "Mulino Caputo",
+      "name": "A metro",
+      "flourType": "00",
+      "wMin": 310,
+      "wMax": 330,
+      "plMin": 0.45,
+      "plMax": 0.5,
+      "proteinPercent": 13.5,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/a-metro/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-006",
+      "brand": "Mulino Caputo",
+      "name": "Manitoba Oro",
+      "flourType": "0",
+      "wMin": 360,
+      "wMax": 380,
+      "plMin": 0.45,
+      "plMax": 0.55,
+      "proteinPercent": 14,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/manitoba-oro/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-007",
+      "brand": "Mulino Caputo",
+      "name": "Alba",
+      "flourType": "00",
+      "wMin": 260,
+      "wMax": 280,
+      "plMin": 0.5,
+      "plMax": 0.6,
+      "proteinPercent": 12.75,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.mulinocaputo.it/prodotti/farina-alba-1kg/",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-008",
+      "brand": "Molino Dallagiovanna",
+      "name": "laNapoletana",
+      "flourType": "00",
+      "wMin": 310,
+      "wMax": 310,
+      "plMin": 0.6,
+      "plMax": 0.6,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "Professional pizza line; verify retail variant",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-009",
+      "brand": "Molino Dallagiovanna",
+      "name": "laNapoletana 2.0",
+      "flourType": "0",
+      "wMin": 310,
+      "wMax": 310,
+      "plMin": 0.6,
+      "plMax": 0.6,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-010",
+      "brand": "Molino Dallagiovanna",
+      "name": "laNapoletana 2.0 PLUS",
+      "flourType": "0",
+      "wMin": 310,
+      "wMax": 310,
+      "plMin": 0.6,
+      "plMax": 0.6,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-011",
+      "brand": "Molino Dallagiovanna",
+      "name": "FR Rosa",
+      "flourType": "0 / 00",
+      "wMin": 200,
+      "wMax": 200,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "Manufacturer page prints P/L as 0.0.55; left unset",
+      "qualityFlags": [
+        "ambiguous_pl_in_source"
+      ]
+    },
+    {
+      "id": "official-012",
+      "brand": "Molino Dallagiovanna",
+      "name": "E Rosa",
+      "flourType": "00",
+      "wMin": 250,
+      "wMax": 250,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "Manufacturer page prints P/L as 0.0.55; left unset; type 0 also available",
+      "qualityFlags": [
+        "ambiguous_pl_in_source"
+      ]
+    },
+    {
+      "id": "official-013",
+      "brand": "Molino Dallagiovanna",
+      "name": "N Blu",
+      "flourType": "00",
+      "wMin": 290,
+      "wMax": 290,
+      "plMin": 0.55,
+      "plMax": 0.55,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "Also available as type 0",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-014",
+      "brand": "Molino Dallagiovanna",
+      "name": "R Verde",
+      "flourType": "00",
+      "wMin": 340,
+      "wMax": 340,
+      "plMin": 0.6,
+      "plMax": 0.6,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "Also available as type 0",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-015",
+      "brand": "Molino Dallagiovanna",
+      "name": "S Rossa",
+      "flourType": "00",
+      "wMin": 390,
+      "wMax": 390,
+      "plMin": 0.6,
+      "plMax": 0.6,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "Also available as type 0",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-016",
+      "brand": "Molino Dallagiovanna",
+      "name": "Nobilgrano E Rosa",
+      "flourType": "0 / 1",
+      "wMin": 210,
+      "wMax": 210,
+      "plMin": 0.55,
+      "plMax": 0.55,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-017",
+      "brand": "Molino Dallagiovanna",
+      "name": "Nobilgrano N Blu",
+      "flourType": "0 / 1",
+      "wMin": 290,
+      "wMax": 290,
+      "plMin": 0.55,
+      "plMax": 0.55,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-018",
+      "brand": "Molino Dallagiovanna",
+      "name": "Nobilgrano R Verde",
+      "flourType": "0 / 1",
+      "wMin": 340,
+      "wMax": 340,
+      "plMin": 0.55,
+      "plMax": 0.55,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-pizza",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-019",
+      "brand": "Molino Dallagiovanna",
+      "name": "Far Pizza",
+      "flourType": "00",
+      "wMin": 200,
+      "wMax": 200,
+      "plMin": 0.55,
+      "plMax": 0.55,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-piccol",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-020",
+      "brand": "Molino Dallagiovanna",
+      "name": "Universale 00",
+      "flourType": "00",
+      "wMin": 250,
+      "wMax": 250,
+      "plMin": 0.6,
+      "plMax": 0.6,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.dallagiovanna.it/farine-speciali-far-piccol",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-021",
+      "brand": "Polselli",
+      "name": "Ideale",
+      "flourType": "00",
+      "wMin": 220,
+      "wMax": 220,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Ideale/linea/convenzionale",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-022",
+      "brand": "Polselli",
+      "name": "Classica",
+      "flourType": "00",
+      "wMin": 270,
+      "wMax": 270,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Classica/linea/convenzionale",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-023",
+      "brand": "Polselli",
+      "name": "Vivace",
+      "flourType": "00",
+      "wMin": 290,
+      "wMax": 290,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Vivace/linea/convenzionale",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-024",
+      "brand": "Polselli",
+      "name": "Super",
+      "flourType": "00",
+      "wMin": 360,
+      "wMax": 360,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Super/linea/convenzionale",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-025",
+      "brand": "Polselli",
+      "name": "Italiana",
+      "flourType": "1",
+      "wMin": 300,
+      "wMax": 300,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Italiana/linea/integrale",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-026",
+      "brand": "Polselli",
+      "name": "Rustica",
+      "flourType": "2",
+      "wMin": 300,
+      "wMax": 300,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Rustica/linea/integrale",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-027",
+      "brand": "Polselli",
+      "name": "Azzurra",
+      "flourType": "1",
+      "wMin": 280,
+      "wMax": 280,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Azzurra/linea/zero",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-028",
+      "brand": "Polselli",
+      "name": "Rossa",
+      "flourType": "0",
+      "wMin": 280,
+      "wMax": 280,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Rossa/linea/zero",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    },
+    {
+      "id": "official-029",
+      "brand": "Polselli",
+      "name": "Bio",
+      "flourType": null,
+      "wMin": 220,
+      "wMax": 220,
+      "plMin": null,
+      "plMax": null,
+      "proteinPercent": null,
+      "waterAbsorptionPercent": null,
+      "source": {
+        "type": "manufacturer_website",
+        "url": "https://www.polselli.it/it/farina/nome/Bio/linea/bio",
+        "checkedOn": "2026-10-10"
+      },
+      "notes": "W is the manufacturer nominal value; manufacturer indicates tolerance +0-5%.",
+      "qualityFlags": []
+    }
+  ]
+}

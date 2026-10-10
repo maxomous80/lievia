@@ -1,0 +1,929 @@
+{
+  "schemaVersion": 1,
+  "catalogue": "Lievia official flour additions batch 2026-10-10",
+  "count": 36,
+  "note": "Solo prodotti identificati su siti dei produttori. Campi null significano non verificati. W e P/L mantengono intervalli; non equiparare assorbimento farinografico e idratazione pizza. Alcune specifiche proteiche sono su sostanza secca. Verificare diritti di riuso e versioni delle schede prima di redistribuzione commerciale. Petra non inclusa: nessuna scheda ufficiale sufficientemente verificata trovata in questa ricerca.",
+  "flours": [
+    {
+      "id": "official-molino-grassi-pizza-e-focaccia-00",
+      "brand": "Molino Grassi",
+      "name": "Pizza e Focaccia 00",
+      "flourType": "00",
+      "w": {
+        "min": 290,
+        "max": 290
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.5
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 56,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/farina-00-pizza-e-focaccia/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-00-slow-h24",
+      "brand": "Molino Grassi",
+      "name": "00 Slow H24",
+      "flourType": "00",
+      "w": {
+        "min": 380,
+        "max": 380
+      },
+      "pl": {
+        "min": 0.55,
+        "max": 0.55
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 58,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/00-slow-h24/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-00-extramidi-h16",
+      "brand": "Molino Grassi",
+      "name": "00 ExtraMidi H16",
+      "flourType": "00",
+      "w": {
+        "min": 350,
+        "max": 350
+      },
+      "pl": {
+        "min": 0.55,
+        "max": 0.55
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 57,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/00-extramidi-h16/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-00-speedy-h10",
+      "brand": "Molino Grassi",
+      "name": "00 Speedy H10",
+      "flourType": "00",
+      "w": {
+        "min": 270,
+        "max": 270
+      },
+      "pl": {
+        "min": 0.55,
+        "max": 0.55
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 54,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/00-speedy-h10/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-00-midi-h12",
+      "brand": "Molino Grassi",
+      "name": "00 Midi H12",
+      "flourType": "00",
+      "w": {
+        "min": 290,
+        "max": 290
+      },
+      "pl": {
+        "min": 0.55,
+        "max": 0.55
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 56,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/00-midi-h12/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-napoletana-midi",
+      "brand": "Molino Grassi",
+      "name": "Napoletana Midi",
+      "flourType": "miscela",
+      "w": {
+        "min": 270,
+        "max": 270
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.5
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 56,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/napoletana-midi/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-romana",
+      "brand": "Molino Grassi",
+      "name": "Romana",
+      "flourType": "miscela",
+      "w": {
+        "min": 320,
+        "max": 320
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.5
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 57,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/romana/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-romana-rustica",
+      "brand": "Molino Grassi",
+      "name": "Romana Rustica",
+      "flourType": "miscela",
+      "w": {
+        "min": 320,
+        "max": 320
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.5
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 57,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/romana-rustica/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-integrale-biologica",
+      "brand": "Molino Grassi",
+      "name": "Integrale biologica",
+      "flourType": "integrale",
+      "w": {
+        "min": 240,
+        "max": 240
+      },
+      "pl": {
+        "min": 0.55,
+        "max": 0.55
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 54,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/integrale-3/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-tipo-1-macinata-a-pietra",
+      "brand": "Molino Grassi",
+      "name": "Tipo 1 Macinata a Pietra",
+      "flourType": "1",
+      "w": {
+        "min": 250,
+        "max": 250
+      },
+      "pl": {
+        "min": 0.7,
+        "max": 0.7
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 56,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/tipo-1-macinata-a-pietra/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-miracolo-tipo-1",
+      "brand": "Molino Grassi",
+      "name": "Miracolo Tipo 1",
+      "flourType": "1",
+      "w": {
+        "min": 75,
+        "max": 75
+      },
+      "pl": {
+        "min": 0.35,
+        "max": 0.35
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 56,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/miracolo-farina-tipo-1/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-grassi-khorasan-kamut",
+      "brand": "Molino Grassi",
+      "name": "Khorasan Kamut",
+      "flourType": "khorasan",
+      "w": {
+        "min": 120,
+        "max": 120
+      },
+      "pl": {
+        "min": 1.0,
+        "max": 1.0
+      },
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": 64,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinograssi.it/product/farina-di-grano-khorasan-kamut/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-pizza-in-teglia",
+      "brand": "Molino Vigevano",
+      "name": "Pizza in Teglia",
+      "flourType": null,
+      "w": {
+        "min": 350,
+        "max": 350
+      },
+      "pl": null,
+      "proteinPercent": 14.5,
+      "farinographAbsorptionPercent": null,
+      "notes": "Scheda retail; idratazione fino a 80% dichiarata",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/pizza-in-teglia/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-vesuvio-retail",
+      "brand": "Molino Vigevano",
+      "name": "Vesuvio retail",
+      "flourType": null,
+      "w": {
+        "min": 290,
+        "max": 290
+      },
+      "pl": null,
+      "proteinPercent": 14.5,
+      "farinographAbsorptionPercent": null,
+      "notes": "Distinto dalla versione professionale",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/vesuvio/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-vesuvio-professionale",
+      "brand": "Molino Vigevano",
+      "name": "Vesuvio professionale",
+      "flourType": null,
+      "w": {
+        "min": 270,
+        "max": 290
+      },
+      "pl": null,
+      "proteinPercent": 14.5,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/vesuvio-farina-professionale/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-vera-napoli",
+      "brand": "Molino Vigevano",
+      "name": "Vera Napoli",
+      "flourType": null,
+      "w": {
+        "min": 250,
+        "max": 270
+      },
+      "pl": null,
+      "proteinPercent": 13,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/vera-napoli/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-aroma",
+      "brand": "Molino Vigevano",
+      "name": "aRoma",
+      "flourType": null,
+      "w": {
+        "min": 330,
+        "max": 360
+      },
+      "pl": null,
+      "proteinPercent": 13.5,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/aroma/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-moreschina",
+      "brand": "Molino Vigevano",
+      "name": "Moreschina",
+      "flourType": null,
+      "w": {
+        "min": 270,
+        "max": 290
+      },
+      "pl": null,
+      "proteinPercent": 14,
+      "farinographAbsorptionPercent": null,
+      "notes": "Miscela multicereali",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/moreschina-farina-professionale/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-moreschina-ricca",
+      "brand": "Molino Vigevano",
+      "name": "Moreschina Ricca",
+      "flourType": null,
+      "w": {
+        "min": 270,
+        "max": 290
+      },
+      "pl": null,
+      "proteinPercent": 14,
+      "farinographAbsorptionPercent": null,
+      "notes": "Miscela multicereali",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/moreschina-ricca/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-tramonti",
+      "brand": "Molino Vigevano",
+      "name": "Tramonti",
+      "flourType": null,
+      "w": {
+        "min": 330,
+        "max": 360
+      },
+      "pl": null,
+      "proteinPercent": 14.5,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/tramonti/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-verace",
+      "brand": "Molino Vigevano",
+      "name": "Verace",
+      "flourType": null,
+      "w": {
+        "min": 200,
+        "max": 230
+      },
+      "pl": null,
+      "proteinPercent": 11.2,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/verace/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-vigevano-oro-fibra-uno",
+      "brand": "Molino Vigevano",
+      "name": "Oro Fibra Uno",
+      "flourType": "1",
+      "w": {
+        "min": 290,
+        "max": 310
+      },
+      "pl": null,
+      "proteinPercent": 13.2,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://molinovigevano.com/prodotto/oro-fibra-uno/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "proteinPercent",
+        "flourType"
+      ]
+    },
+    {
+      "id": "official-molino-pasini-ideale-per-pizza",
+      "brand": "Molino Pasini",
+      "name": "Ideale per pizza",
+      "flourType": null,
+      "w": {
+        "min": 240,
+        "max": 270
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.6
+      },
+      "proteinPercent": 12.1,
+      "farinographAbsorptionPercent": null,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinopasini.com/it/prodotti-ricette/13-ideale-per-pizza",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-pasini-farina-00-per-tutti-gli-usi",
+      "brand": "Molino Pasini",
+      "name": "Farina 00 per tutti gli usi",
+      "flourType": "00",
+      "w": {
+        "min": 200,
+        "max": 220
+      },
+      "pl": {
+        "min": 0.45,
+        "max": 0.55
+      },
+      "proteinPercent": 10.9,
+      "farinographAbsorptionPercent": null,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinopasini.com/it/prodotti-ricette/21-farina-00-per-tutti-gli-usi",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "proteinPercent",
+        "flourType"
+      ]
+    },
+    {
+      "id": "official-molino-pasini-pane-e-pizza",
+      "brand": "Molino Pasini",
+      "name": "Pane e Pizza",
+      "flourType": null,
+      "w": {
+        "min": 250,
+        "max": 280
+      },
+      "pl": {
+        "min": 0.55,
+        "max": 0.8
+      },
+      "proteinPercent": 12,
+      "farinographAbsorptionPercent": null,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinopasini.com/it/prodotti-ricette/24-pane-e-pizza",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-molino-pasini-primitiva-2",
+      "brand": "Molino Pasini",
+      "name": "Primitiva 2",
+      "flourType": "2",
+      "w": {
+        "min": 280,
+        "max": 300
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.6
+      },
+      "proteinPercent": 14.4,
+      "farinographAbsorptionPercent": null,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinopasini.com/it/prodotti-ricette/18-primitiva-2",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "proteinPercent",
+        "flourType"
+      ]
+    },
+    {
+      "id": "official-molino-pasini-ideale-per-pizza-e-focaccia-con-lievito",
+      "brand": "Molino Pasini",
+      "name": "Ideale per pizza e focaccia con lievito",
+      "flourType": null,
+      "w": null,
+      "pl": null,
+      "proteinPercent": 11.4,
+      "farinographAbsorptionPercent": null,
+      "notes": null,
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinopasini.com/it/prodotti-ricette/14-ideale-per-pizza-e-focaccia-con-lievito",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "proteinPercent"
+      ]
+    },
+    {
+      "id": "official-le-5-stagioni-superiore",
+      "brand": "Le 5 Stagioni",
+      "name": "Superiore",
+      "flourType": "00",
+      "w": null,
+      "pl": null,
+      "proteinPercent": 13,
+      "farinographAbsorptionPercent": 57,
+      "notes": "Proteine dichiarate su sostanza secca; assorbimento farinografico, non idratazione pizza",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://le5stagioni.com/prodotto/superiore/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "proteinPercent",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-le-5-stagioni-oro",
+      "brand": "Le 5 Stagioni",
+      "name": "Oro",
+      "flourType": "00",
+      "w": null,
+      "pl": null,
+      "proteinPercent": 14,
+      "farinographAbsorptionPercent": 58.7,
+      "notes": "Proteine dichiarate su sostanza secca; assorbimento farinografico, non idratazione pizza",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://le5stagioni.com/prodotto/oro/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "proteinPercent",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-le-5-stagioni-pizza-napoletana-verde",
+      "brand": "Le 5 Stagioni",
+      "name": "Pizza Napoletana Verde",
+      "flourType": "00",
+      "w": null,
+      "pl": null,
+      "proteinPercent": 11.5,
+      "farinographAbsorptionPercent": 55,
+      "notes": "Proteine dichiarate su sostanza secca; assorbimento farinografico, non idratazione pizza",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://le5stagioni.com/prodotto/pizza-napoletana-verde/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "proteinPercent",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-le-5-stagioni-pizza-napoletana-rossa",
+      "brand": "Le 5 Stagioni",
+      "name": "Pizza Napoletana Rossa",
+      "flourType": "00",
+      "w": null,
+      "pl": null,
+      "proteinPercent": 13,
+      "farinographAbsorptionPercent": 57,
+      "notes": "Proteine dichiarate su sostanza secca; assorbimento farinografico, non idratazione pizza",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://le5stagioni.com/prodotto/pizza-napoletana-rossa/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "proteinPercent",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-le-5-stagioni-superiore---scheda-storica-2018",
+      "brand": "Le 5 Stagioni",
+      "name": "Superiore - scheda storica 2018",
+      "flourType": "00",
+      "w": {
+        "min": 320,
+        "max": 360
+      },
+      "pl": {
+        "min": 0.5,
+        "max": 0.7
+      },
+      "proteinPercent": 13,
+      "farinographAbsorptionPercent": 57,
+      "notes": "Scheda storica: non mescolare con specifiche attuali; possibile duplicato variante/revisione",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://le5stagioni.com.br/wp-content/uploads/2018/11/farinhas_superiore.pdf",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "w",
+        "pl",
+        "proteinPercent",
+        "flourType",
+        "farinographAbsorptionPercent"
+      ]
+    },
+    {
+      "id": "official-molino-spadoni-farina-xll-extra-lunghe-lievitazioni",
+      "brand": "Molino Spadoni",
+      "name": "Farina XLL Extra Lunghe Lievitazioni",
+      "flourType": "0",
+      "w": null,
+      "pl": null,
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": null,
+      "notes": "W numerico non presente nella pagina consultata",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinospadoni.it/prodotti/farina-xll-extra-lunghe-lievitazioni/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "flourType"
+      ]
+    },
+    {
+      "id": "official-molino-spadoni-pizza-classica-pz3",
+      "brand": "Molino Spadoni",
+      "name": "Pizza Classica PZ3",
+      "flourType": "00",
+      "w": null,
+      "pl": null,
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinospadoni.it/prodotti/pizza-classica-pz3/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "flourType"
+      ]
+    },
+    {
+      "id": "official-molino-spadoni-pizza-soffice-pz2",
+      "brand": "Molino Spadoni",
+      "name": "Pizza Soffice PZ2",
+      "flourType": "00",
+      "w": null,
+      "pl": null,
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": null,
+      "notes": "",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinospadoni.it/prodotti/pizza-soffice-pz2/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "flourType"
+      ]
+    },
+    {
+      "id": "official-molino-spadoni-preparato-gran-pizza-alla-napoletana",
+      "brand": "Molino Spadoni",
+      "name": "Preparato Gran Pizza alla Napoletana",
+      "flourType": "miscela",
+      "w": null,
+      "pl": null,
+      "proteinPercent": null,
+      "farinographAbsorptionPercent": null,
+      "notes": "Contiene pasta madre e malto: non trattare come farina semplice",
+      "source": {
+        "type": "manufacturer_official",
+        "url": "https://www.molinospadoni.it/prodotti/preparato-per-gran-pizza-alla-napoletana/",
+        "accessed": "2026-10-10"
+      },
+      "verifiedFields": [
+        "name",
+        "flourType"
+      ]
+    }
+  ]
+}

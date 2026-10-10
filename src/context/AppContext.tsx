@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { createSampleRecipe, DEMO_FLOURS } from '../data/defaults'
+import { createSampleRecipe } from '../data/defaults'
+import { mergeFlourCatalog, normalizeCustomFlours } from '../data/officialFlours'
 import { normalizeRecipes } from '../domain/fermentation/migration'
 import { normalizeCalibrationRecords } from '../domain/fermentation/calibration'
 import { normalizeEstimatorConfiguration, createDefaultEstimatorConfiguration, type EstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
@@ -16,14 +17,14 @@ const ESTIMATOR_KEY = 'lievia.stima.v1'
 const CALIBRATION_KEY = 'lievia.calibrazione.v1'
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [customFlours, setCustomFlours] = useState(() => readStored<Flour[]>(FLOURS_KEY, []))
+  const [customFlours, setCustomFlours] = useState(() => normalizeCustomFlours(readStored<unknown>(FLOURS_KEY, [])))
   const [recipes, setRecipes] = useState(() => normalizeRecipes(readStored<unknown>(RECIPES_KEY, [createSampleRecipe()])))
   const [outcomes, setOutcomes] = useState(() => normalizeOutcomes(readStored<unknown>(OUTCOMES_KEY, [])))
   const [calibrationRecords, setCalibrationRecords] = useState(() => normalizeCalibrationRecords(readStored<unknown>(CALIBRATION_KEY, [])))
   const [estimatorConfiguration, setEstimatorConfiguration] = useState(() => normalizeEstimatorConfiguration(
     readStored<unknown>(ESTIMATOR_KEY, createDefaultEstimatorConfiguration()),
   ))
-  const flourCatalog = useMemo(() => [...DEMO_FLOURS, ...customFlours], [customFlours])
+  const flourCatalog = useMemo(() => mergeFlourCatalog(customFlours), [customFlours])
 
   useEffect(() => writeStored(FLOURS_KEY, customFlours), [customFlours])
   useEffect(() => writeStored(RECIPES_KEY, recipes), [recipes])
@@ -32,6 +33,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => writeStored(ESTIMATOR_KEY, estimatorConfiguration), [estimatorConfiguration])
 
   function saveFlour(flour: Flour) {
+    if (flour.officialSource) return
     setCustomFlours((current) => [
       ...current.filter((item) => item.id !== flour.id),
       { ...flour, isDemo: false },
