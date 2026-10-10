@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { OFFICIAL_FLOURS } from '../../data/officialFlours'
 import type { Flour } from '../../models'
-import { deriveBlendPropertyRanges, isFlourBlendEligible } from './blendProperties'
+import { deriveBlendPropertyRanges, isFlourBlendEligible, missingBlendTechnicalData } from './blendProperties'
 
 const custom: Flour = {
   id: 'custom-1', brand: 'Molino locale', name: 'Tipo 1', flourType: '1',
@@ -43,5 +43,15 @@ describe('intervalli aritmetici delle miscele', () => {
     expect(isFlourBlendEligible(prepared)).toBe(false)
     expect(isFlourBlendEligible(blend)).toBe(true)
     expect(isFlourBlendEligible(custom)).toBe(true)
+  })
+
+  it('elenca i dati mancanti per prodotto senza colmare i valori nulli', () => {
+    const incomplete = OFFICIAL_FLOURS.find(({ officialSource }) => officialSource?.id === 'official-008')!
+    expect(missingBlendTechnicalData([{ flourId: incomplete.id, percentage: 100 }], [incomplete])).toEqual([
+      { flourId: incomplete.id, flourName: 'laNapoletana', fields: ['proteine'] },
+    ])
+    expect(missingBlendTechnicalData([{ flourId: 'missing-id', percentage: 100 }], [])).toEqual([
+      { flourId: 'missing-id', flourName: 'Farina non disponibile', fields: ['farina non disponibile nel catalogo'] },
+    ])
   })
 })

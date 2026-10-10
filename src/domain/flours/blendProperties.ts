@@ -11,6 +11,27 @@ export interface BlendPropertyRanges {
   protein: NumericRange | undefined
 }
 
+export function missingBlendTechnicalData(blend: Array<{ flourId: string; percentage: number }>, flours: Flour[]) {
+  const missing = new Map<string, Set<string>>()
+  for (const item of blend.filter(({ percentage }) => percentage > 0)) {
+    const flour = flours.find(({ id }) => id === item.flourId)
+    if (!flour) {
+      missing.set(item.flourId, new Set(['farina non disponibile nel catalogo']))
+      continue
+    }
+    const fields = new Set<string>()
+    if (!sourceRange(flour, 'w')) fields.add('W')
+    if (!sourceRange(flour, 'pl')) fields.add('P/L')
+    if (!sourceRange(flour, 'protein')) fields.add('proteine')
+    if (fields.size) missing.set(flour.id, fields)
+  }
+  return [...missing].map(([flourId, fields]) => ({
+    flourId,
+    flourName: flours.find(({ id }) => id === flourId)?.name ?? 'Farina non disponibile',
+    fields: [...fields],
+  }))
+}
+
 export function isFlourBlendEligible(flour: Flour) {
   return flour.productKind !== 'prepared-mix'
 }

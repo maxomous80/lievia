@@ -2,6 +2,7 @@ import { normalizeRecipes } from '../domain/fermentation/migration'
 import { isCalibrationRecord, type CalibrationRecord } from '../domain/fermentation/calibration'
 import { normalizeEstimatorConfiguration, type EstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
 import { isDoughOutcome, type DoughOutcome } from '../domain/feedback/outcomes'
+import { normalizePantryEntries, type PantryEntry } from '../domain/flours/pantry'
 import type { Flour, Recipe } from '../models'
 
 export interface LieviaBackup {
@@ -12,6 +13,7 @@ export interface LieviaBackup {
   customFlours: Flour[]
   outcomes: DoughOutcome[]
   calibrationRecords: CalibrationRecord[]
+  pantryEntries?: PantryEntry[]
   estimatorConfiguration: EstimatorConfiguration
 }
 
@@ -20,12 +22,13 @@ export interface BackupData {
   customFlours: Flour[]
   outcomes: DoughOutcome[]
   calibrationRecords: CalibrationRecord[]
+  pantryEntries: PantryEntry[]
   estimatorConfiguration: EstimatorConfiguration
 }
 
 export interface BackupMergeResult {
   data: BackupData
-  added: { recipes: number; customFlours: number; outcomes: number; calibrationRecords: number }
+  added: { recipes: number; customFlours: number; outcomes: number; calibrationRecords: number; pantryEntries: number }
 }
 
 export function serializeBackup(data: BackupData, exportedAt = new Date().toISOString()): string {
@@ -45,7 +48,8 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
     !Array.isArray(parsed.recipes) || !Array.isArray(parsed.customFlours) || !Array.isArray(parsed.outcomes) ||
     !Array.isArray(parsed.calibrationRecords) || !parsed.recipes.every(isRecipeShape) ||
     !parsed.customFlours.every(isCustomFlour) || !parsed.outcomes.every(isDoughOutcome) ||
-    !parsed.calibrationRecords.every(isCalibrationRecord)) {
+    !parsed.calibrationRecords.every(isCalibrationRecord) ||
+    (parsed.pantryEntries !== undefined && (!Array.isArray(parsed.pantryEntries) || !parsed.pantryEntries.every(isPantryEntry)))) {
     throw new TypeError('Il file non è un backup Lievia valido o contiene dati non riconosciuti.')
   }
 
@@ -54,6 +58,8 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
   const addedFlours = appendNewById(current.customFlours, parsed.customFlours)
   const addedOutcomes = appendNewById(current.outcomes, parsed.outcomes)
   const addedCalibrationRecords = appendNewById(current.calibrationRecords, parsed.calibrationRecords)
+  const importedPantryEntries = normalizePantryEntries(parsed.pantryEntries ?? [])
+  const addedPantryEntries = appendNewByFlourId(current.pantryEntries, importedPantryEntries)
   const importedEstimatorConfiguration = normalizeEstimatorConfiguration(parsed.estimatorConfiguration)
   const useImportedEstimatorConfiguration = isDefaultEstimatorConfiguration(current.estimatorConfiguration)
   return {
@@ -62,6 +68,7 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
       customFlours: [...current.customFlours, ...addedFlours.items],
       outcomes: [...current.outcomes, ...addedOutcomes.items],
       calibrationRecords: [...current.calibrationRecords, ...addedCalibrationRecords.items],
+      pantryEntries: [...current.pantryEntries, ...addedPantryEntries.items],
       estimatorConfiguration: useImportedEstimatorConfiguration ? importedEstimatorConfiguration : current.estimatorConfiguration,
     },
     added: {
@@ -69,8 +76,26 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
       customFlours: addedFlours.items.length,
       outcomes: addedOutcomes.items.length,
       calibrationRecords: addedCalibrationRecords.items.length,
+      pantryEntries: addedPantryEntries.items.length,
     },
   }
+}
+
+function appendNewByFlourId(existing: PantryEntry[], incoming: PantryEntry[]) {
+  const seen = new Set(existing.map(({ flourId }) => flourId))
+  const items = incoming.filter(({ flourId }) => {
+    if (seen.has(flourId)) return false
+    seen.add(flourId)
+    return true
+  })
+  return { items }
+}
+
+function isPantryEntry(value: unknown): value is PantryEntry {
+  if (!isRecord(value)) return false
+  return typeof value.flourId === 'string' && value.flourId.trim().length > 0 &&
+    (value.quantityGrams === null || typeof value.quantityGrams === 'number' && Number.isFinite(value.quantityGrams) && value.quantityGrams >= 0) &&
+    typeof value.notes === 'string' && isDate(value.updatedAt)
 }
 
 function isDefaultEstimatorConfiguration(configuration: EstimatorConfiguration) {

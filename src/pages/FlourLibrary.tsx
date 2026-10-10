@@ -1,7 +1,8 @@
-import { Check, CircleHelp, Pencil, Plus, Save, Trash2, Wheat, X } from 'lucide-react'
+import { Check, CircleHelp, PackageCheck, Pencil, Plus, Save, Trash2, Wheat, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useAppData } from '../context/useAppData'
 import { OfficialFlourCatalogue } from '../components/OfficialFlourCatalogue'
+import { PantryInventory } from '../components/PantryInventory'
 import { ARCHIVED_OFFICIAL_FLOURS } from '../data/officialFlours'
 import type { Flour } from '../models'
 
@@ -23,7 +24,8 @@ function formatOptional(value: number | undefined, suffix = '') {
 }
 
 export function FlourLibrary() {
-  const { flourCatalog, saveFlour, deleteFlour } = useAppData()
+  const { flourCatalog, saveFlour, deleteFlour, pantryEntries, addPantryFlour, updatePantryFlour, removePantryFlour } = useAppData()
+  const [activeTab, setActiveTab] = useState<'catalogue' | 'pantry' | 'custom'>('catalogue')
   const [fields, setFields] = useState<FlourFields>(emptyFields)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -85,16 +87,27 @@ export function FlourLibrary() {
   const custom = flourCatalog.filter((flour) => !flour.isDemo && !flour.officialSource)
   const demos = flourCatalog.filter((flour) => flour.isDemo)
   const official = flourCatalog.filter((flour) => flour.officialSource)
+  const pantryIds = new Set(pantryEntries.map(({ flourId }) => flourId))
+
+  function togglePantry(flourId: string) {
+    if (pantryIds.has(flourId)) removePantryFlour(flourId)
+    else addPantryFlour(flourId)
+  }
+
   return (
     <div className="page-stack">
-      <section className="page-intro-row"><div><p className="eyebrow">CONOSCI I TUOI INGREDIENTI</p><h1>La dispensa</h1><p className="intro-copy">Le farine che usi, i dati che raccogli, le miscele che immagini.</p></div><a href="#form-farina" className="button button-primary"><Plus size={17} /> Aggiungi farina</a></section>
+      <section className="page-intro-row"><div><p className="eyebrow">CONOSCI I TUOI INGREDIENTI</p><h1>Farine e dispensa</h1><p className="intro-copy">Schede tecniche, scorte e profili personali, conservati su questo dispositivo.</p></div>{activeTab === 'custom' && <a href="#form-farina" className="button button-primary"><Plus size={17} /> Aggiungi farina</a>}</section>
+      <nav className="flour-library-tabs" aria-label="Sezioni farine"><button type="button" className={activeTab === 'catalogue' ? 'active' : ''} aria-pressed={activeTab === 'catalogue'} onClick={() => setActiveTab('catalogue')}>Catalogo <span>{official.length}</span></button><button type="button" className={activeTab === 'pantry' ? 'active' : ''} aria-pressed={activeTab === 'pantry'} onClick={() => setActiveTab('pantry')}>La mia dispensa <span>{pantryEntries.length}</span></button><button type="button" className={activeTab === 'custom' ? 'active' : ''} aria-pressed={activeTab === 'custom'} onClick={() => setActiveTab('custom')}>Farine personalizzate <span>{custom.length}</span></button></nav>
+      {activeTab === 'catalogue' && <>
       <div className="demo-note"><CircleHelp size={17} /><p>I prodotti commerciali sono seed read-only basati sulle fonti indicate. Range e valori mancanti restano quelli dichiarati dai produttori; i profili demo non rappresentano prodotti commerciali.</p></div>
+      <OfficialFlourCatalogue flours={official} archivedFlours={ARCHIVED_OFFICIAL_FLOURS} pantryIds={pantryIds} onTogglePantry={togglePantry} />
       <section className="flour-section"><div className="section-heading"><div><p className="eyebrow">INCLUSI IN LIEVIA</p><h2>Profili dimostrativi <span className="inline-count">{demos.length}</span></h2></div></div><div className="flour-catalog-grid">
-        {demos.map((flour, index) => <article className="flour-card demo-flour-card" key={flour.id}><div className="flour-card-top"><span className={`flour-number shade-${index}`}>0{index + 1}</span><span className="demo-tag">PROFILO DEMO</span></div><h3>{flour.name}</h3><p className="flour-brand">{flour.brand} · {flour.flourType}</p><p className="flour-notes">{flour.hydrationNotes}</p><div className="flour-properties"><span><small>W</small> n.d.</span><span><small>P/L</small> n.d.</span><span><small>Proteine</small> n.d.</span></div></article>)}
-      </div></section>
-      <OfficialFlourCatalogue flours={official} archivedFlours={ARCHIVED_OFFICIAL_FLOURS} />
+        {demos.map((flour, index) => <article className="flour-card demo-flour-card" key={flour.id}><div className="flour-card-top"><span className={`flour-number shade-${index}`}>0{index + 1}</span><span className="demo-tag">PROFILO DEMO</span></div><h3>{flour.name}</h3><p className="flour-brand">{flour.brand} · {flour.flourType}</p><p className="flour-notes">{flour.hydrationNotes}</p><div className="flour-properties"><span><small>W</small> n.d.</span><span><small>P/L</small> n.d.</span><span><small>Proteine</small> n.d.</span></div><button className="button button-outline pantry-card-action" type="button" onClick={() => togglePantry(flour.id)}>{pantryIds.has(flour.id) ? <PackageCheck size={16} /> : <Plus size={16} />}{pantryIds.has(flour.id) ? 'Nella mia dispensa' : 'Aggiungi alla dispensa'}</button></article>)}
+      </div></section></>}
+      {activeTab === 'pantry' && <section className="flour-section pantry-section"><div className="section-heading"><div><p className="eyebrow">SCORTE SU QUESTO DISPOSITIVO</p><h2>La mia dispensa <span className="inline-count">{pantryEntries.length}</span></h2></div></div><PantryInventory entries={pantryEntries} flours={flourCatalog} onUpdate={updatePantryFlour} onRemove={removePantryFlour} /></section>}
+      {activeTab === 'custom' && <>
       <section className="flour-section"><div className="section-heading"><div><p className="eyebrow">SALVATE SU QUESTO DISPOSITIVO</p><h2>Le mie farine <span className="inline-count">{custom.length}</span></h2></div></div>
-        {custom.length > 0 ? <div className="custom-flour-list">{custom.map((flour) => <article className="custom-flour-row" key={flour.id}><div className="custom-flour-icon"><Wheat size={20} /></div><div className="custom-flour-info"><strong>{flour.name}</strong><span>{flour.brand} · {flour.flourType}</span></div><div className="custom-flour-values"><span><small>W</small>{formatOptional(flour.strengthW)}</span><span><small>P/L</small>{formatOptional(flour.plRatio)}</span><span><small>Prot.</small>{formatOptional(flour.proteinPct, '%')}</span></div><div className="custom-flour-actions"><button className="icon-button" type="button" title="Modifica" aria-label={`Modifica ${flour.name}`} onClick={() => beginEdit(flour)}><Pencil size={16} /></button><button className="icon-button danger-icon" type="button" title="Elimina" aria-label={`Elimina ${flour.name}`} onClick={() => { if (window.confirm(`Eliminare “${flour.name}”?`)) deleteFlour(flour.id) }}><Trash2 size={16} /></button></div></article>)}</div> : <div className="empty-inline"><span>La tua raccolta inizia da qui.</span><span>Le schede personalizzate restano solo su questo dispositivo.</span></div>}
+        {custom.length > 0 ? <div className="custom-flour-list">{custom.map((flour) => <article className="custom-flour-row" key={flour.id}><div className="custom-flour-icon"><Wheat size={20} /></div><div className="custom-flour-info"><strong>{flour.name}</strong><span>{flour.brand} · {flour.flourType}</span></div><div className="custom-flour-values"><span><small>W</small>{formatOptional(flour.strengthW)}</span><span><small>P/L</small>{formatOptional(flour.plRatio)}</span><span><small>Prot.</small>{formatOptional(flour.proteinPct, '%')}</span></div><div className="custom-flour-actions"><button className="icon-button" type="button" title="Modifica" aria-label={`Modifica ${flour.name}`} onClick={() => beginEdit(flour)}><Pencil size={16} /></button><button className="icon-button danger-icon" type="button" title="Elimina" aria-label={`Elimina ${flour.name}`} onClick={() => { if (window.confirm(`Eliminare “${flour.name}”?`)) deleteFlour(flour.id) }}><Trash2 size={16} /></button><button className="icon-button" type="button" title="Aggiungi alla dispensa" aria-label={`Aggiungi ${flour.name} alla dispensa`} onClick={() => addPantryFlour(flour.id)} disabled={pantryIds.has(flour.id)}>{pantryIds.has(flour.id) ? <PackageCheck size={16} /> : <Plus size={16} />}</button></div></article>)}</div> : <div className="empty-inline"><span>La tua raccolta inizia da qui.</span><span>Le schede personalizzate restano solo su questo dispositivo.</span></div>}
       </section>
       <section className="flour-form-section" id="form-farina"><div className="section-heading"><div><p className="eyebrow">{editingId ? 'AGGIORNA SCHEDA' : 'NUOVA SCHEDA'}</p><h2>{editingId ? 'Modifica farina' : 'Aggiungi una farina'}</h2></div>{editingId && <button className="icon-button" onClick={resetForm} type="button" aria-label="Annulla modifica"><X size={17} /></button>}</div>
         <form className="flour-form" onSubmit={submit}>
@@ -109,6 +122,7 @@ export function FlourLibrary() {
           <div className="form-bottom">{error && <p className="form-error" role="alert">{error}</p>}{saved && <p className="form-success"><Check size={15} /> Scheda salvata</p>}<button type="submit" className="button button-primary"><Save size={16} /> {editingId ? 'Salva modifiche' : 'Salva farina'}</button></div>
         </form>
       </section>
+      </>}
       <footer className="page-foot"><span>LIEVIA · LA DISPENSA</span><span>DATI TECNICI INSERITI DA TE</span></footer>
     </div>
   )

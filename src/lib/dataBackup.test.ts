@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultDraft } from '../data/defaults'
 import type { DoughOutcome } from '../domain/feedback/outcomes'
+import type { PantryEntry } from '../domain/flours/pantry'
 import { createDefaultEstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
 import { OFFICIAL_FLOURS } from '../data/officialFlours'
 import type { Recipe } from '../models'
@@ -28,8 +29,14 @@ const outcome: DoughOutcome = {
   doughCondition: 'acceptable',
   notes: 'Buona tenuta',
 }
+const pantryEntry: PantryEntry = {
+  flourId: 'commercial-flour-1',
+  quantityGrams: 1250,
+  notes: 'Sacchetto aperto',
+  updatedAt: '2026-10-10T12:00:00.000Z',
+}
 const empty: BackupData = {
-  recipes: [], customFlours: [], outcomes: [], calibrationRecords: [],
+  recipes: [], customFlours: [], outcomes: [], calibrationRecords: [], pantryEntries: [],
   estimatorConfiguration: createDefaultEstimatorConfiguration(),
 }
 
@@ -37,7 +44,7 @@ describe('backup Lievia', () => {
   it('serializza e importa records senza eseguire o sovrascrivere dati', () => {
     const serialized = serializeBackup({ ...empty, recipes: [recipe], customFlours: [flour] }, '2026-10-10T12:00:00.000Z')
     const result = mergeBackup(serialized, { ...empty, recipes: [recipe], customFlours: [flour] })
-    expect(result.added).toEqual({ recipes: 0, customFlours: 0, outcomes: 0, calibrationRecords: 0 })
+    expect(result.added).toEqual({ recipes: 0, customFlours: 0, outcomes: 0, calibrationRecords: 0, pantryEntries: 0 })
     expect(result.data.recipes).toEqual([recipe])
     expect(result.data.customFlours).toEqual([flour])
   })
@@ -52,6 +59,23 @@ describe('backup Lievia', () => {
     })
     expect(result.added.recipes).toBe(1)
     expect(result.data.recipes.map(({ name }) => name)).toEqual(['Versione locale', 'Seconda'])
+  })
+
+  it('include la dispensa nei backup e unisce le voci senza sovrascrivere quelle locali', () => {
+    const localEntry = { ...pantryEntry, quantityGrams: 900, notes: 'Scorta locale' }
+    const incomingEntry = { ...pantryEntry, flourId: 'commercial-flour-2' }
+    const backup = serializeBackup({ ...empty, pantryEntries: [pantryEntry, incomingEntry] })
+    const result = mergeBackup(backup, { ...empty, pantryEntries: [localEntry] })
+    expect(result.data.pantryEntries).toEqual([localEntry, incomingEntry])
+    expect(result.added.pantryEntries).toBe(1)
+  })
+
+  it('accetta i backup precedenti senza dispensa senza modificare le voci locali', () => {
+    const backup = JSON.parse(serializeBackup(empty)) as Record<string, unknown>
+    delete backup.pantryEntries
+    const result = mergeBackup(JSON.stringify(backup), { ...empty, pantryEntries: [pantryEntry] })
+    expect(result.data.pantryEntries).toEqual([pantryEntry])
+    expect(result.added.pantryEntries).toBe(0)
   })
 
   it('rifiuta JSON non valido e strutture di backup malformate', () => {

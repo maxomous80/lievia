@@ -107,11 +107,13 @@ function normalizeOfficialFlourRecord(value: unknown, schemaVersion: string | nu
   if (typeof value.id !== 'string' || !value.id || typeof value.brand !== 'string' || typeof value.name !== 'string' ||
     (typeof value.flourType !== 'string' && value.flourType !== null) || !w || !pl ||
     !validNumberOrNull(value.proteinPercent) ||
+    (value.ashContentPercent !== undefined && !validNumberOrNull(value.ashContentPercent)) ||
     (value.waterAbsorptionPercent !== undefined && !validNumberOrNull(value.waterAbsorptionPercent)) ||
     (value.farinographAbsorptionPercent !== undefined && !validNumberOrNull(value.farinographAbsorptionPercent)) ||
     !isRecord(source) || typeof source.type !== 'string' || typeof source.url !== 'string' ||
     typeof (source.checkedOn ?? source.accessed) !== 'string' ||
     (notes !== null && typeof notes !== 'string') ||
+    (value.suggestedApplications !== undefined && (!Array.isArray(value.suggestedApplications) || !value.suggestedApplications.every((application) => typeof application === 'string'))) ||
     (value.qualityFlags !== undefined && (!Array.isArray(value.qualityFlags) || !value.qualityFlags.every((flag) => typeof flag === 'string'))) ||
     (value.verifiedFields !== undefined && (!Array.isArray(value.verifiedFields) || !value.verifiedFields.every((field) => typeof field === 'string'))) ||
     (value.imageUrl !== undefined && typeof value.imageUrl !== 'string')) return undefined
@@ -132,10 +134,12 @@ function normalizeOfficialFlourRecord(value: unknown, schemaVersion: string | nu
     plMin: pl.min,
     plMax: pl.max,
     proteinPercent: value.proteinPercent as number | null,
+    ashContentPercent: (value.ashContentPercent ?? null) as number | null,
     farinographAbsorptionPercent: (value.farinographAbsorptionPercent ?? null) as number | null,
     waterAbsorptionPercent: (value.waterAbsorptionPercent ?? null) as number | null,
     source: sourceRecord,
     notes,
+    suggestedApplications: (value.suggestedApplications ?? []) as string[],
     qualityFlags: value.qualityFlags ?? [],
     verifiedFields: value.verifiedFields ?? [],
     originalRecord: { ...value },

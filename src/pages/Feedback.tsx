@@ -24,7 +24,7 @@ function recipeYeastGrams(recipe: Recipe | undefined) {
 }
 
 export function Feedback() {
-  const { recipes, outcomes, customFlours, calibrationRecords, estimatorConfiguration, addOutcome, importBackup } = useAppData()
+  const { recipes, outcomes, customFlours, pantryEntries, calibrationRecords, estimatorConfiguration, addOutcome, importBackup } = useAppData()
   const [searchParams] = useSearchParams()
   const [recipeId, setRecipeId] = useState(searchParams.get('ricetta') ?? recipes[0]?.id ?? '')
   const selectedRecipe = recipes.find((recipe) => recipe.id === recipeId)
@@ -85,7 +85,7 @@ export function Feedback() {
   }
 
   function exportData() {
-    const serialized = serializeBackup({ recipes, customFlours, outcomes, calibrationRecords, estimatorConfiguration })
+    const serialized = serializeBackup({ recipes, customFlours, outcomes, calibrationRecords, pantryEntries, estimatorConfiguration })
     const url = URL.createObjectURL(new Blob([serialized], { type: 'application/json' }))
     const anchor = document.createElement('a')
     anchor.href = url
@@ -106,7 +106,7 @@ export function Feedback() {
     }
     try {
       const added = importBackup(await file.text())
-      setMessage(`Importazione completata: ${added.recipes} ricette, ${added.customFlours} farine, ${added.outcomes} esiti e ${added.calibrationRecords} record di calibrazione nuovi. Le impostazioni locali esistenti sono state mantenute.`)
+      setMessage(`Importazione completata: ${added.recipes} ricette, ${added.customFlours} farine, ${added.pantryEntries} voci dispensa, ${added.outcomes} esiti e ${added.calibrationRecords} record di calibrazione nuovi. Le impostazioni locali esistenti sono state mantenute.`)
       setError('')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Impossibile importare il file selezionato.')

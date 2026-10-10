@@ -22,8 +22,10 @@ export interface OfficialFlourSourceRecord {
   plMin: number | null
   plMax: number | null
   proteinPercent: number | null
+  ashContentPercent: number | null
   farinographAbsorptionPercent: number | null
   waterAbsorptionPercent: number | null
+  suggestedApplications?: string[]
   source: { type: string; url: string; checkedOn?: string; accessed?: string }
   notes: string | null
   qualityFlags?: string[]

@@ -139,6 +139,34 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .custom-flour-info span { color: var(--muted); font-size: 10px; }
 .custom-flour-values { display: flex; gap: 24px; margin-left: auto; text-align: center; color: var(--ink); font-size: 11px; }
 .custom-flour-actions { display: flex; gap: 3px; margin-left: 10px; }
+.flour-library-tabs { display: flex; gap: 4px; overflow-x: auto; padding: 4px; border-bottom: 1px solid var(--line); }
+.flour-library-tabs button { display: inline-flex; min-height: 44px; align-items: center; gap: 9px; padding: 0 14px; border: 0; border-radius: 4px 4px 0 0; color: var(--text-secondary); background: transparent; cursor: pointer; font-size: 15px; white-space: nowrap; }
+.flour-library-tabs button.active { color: var(--terracotta-dark); background: var(--terracotta-soft); font-weight: 650; }
+.flour-library-tabs button span { display: grid; min-width: 22px; height: 22px; place-items: center; border-radius: 50%; color: var(--sage-dark); background: var(--sage-soft); font-size: 12px; }
+.catalogue-sort { width: min(210px, 100%); }
+.catalogue-sort > span { font-size: 14px; }
+.catalogue-sort select { min-height: 44px; font-size: 14px; }
+.catalogue-pantry-filter { display: flex; min-height: 44px; align-items: center; gap: 9px; grid-column: 1 / -1; color: var(--text-secondary); font-size: 14px; }
+.catalogue-pantry-filter input { width: 20px; height: 20px; accent-color: var(--terracotta-dark); }
+.pantry-card-action { width: 100%; min-height: 44px; margin-top: 14px; font-size: 14px; }
+.pantry-filters { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(150px, .8fr) minmax(170px, .8fr); gap: 12px; margin-bottom: 14px; }
+.pantry-filters .field > span { font-size: 14px; }
+.pantry-filters input, .pantry-filters select { min-height: 44px; font-size: 16px; }
+.pantry-list { display: grid; border-top: 1px solid var(--line); }
+.pantry-row { display: grid; grid-template-columns: 40px minmax(180px, 1.2fr) minmax(150px, .7fr) minmax(180px, 1fr) 44px; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.pantry-product { display: grid; min-width: 0; gap: 4px; }
+.pantry-product strong { overflow-wrap: anywhere; font-family: var(--serif); font-size: 16px; font-weight: 500; }
+.pantry-product span, .pantry-product a { color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
+.pantry-product a { color: var(--terracotta-dark); text-decoration: underline; text-underline-offset: 2px; }
+.pantry-technical { font-variant-numeric: tabular-nums; }
+.pantry-quantity, .pantry-notes { min-width: 0; }
+.pantry-quantity > span, .pantry-notes > span { font-size: 14px; }
+.pantry-quantity input, .pantry-notes input { min-height: 44px; font-size: 16px; }
+.pantry-row > .icon-button { width: 44px; height: 44px; }
+.pantry-stock-warning { margin: 12px 0; padding: 12px; border-left: 3px solid var(--terracotta); color: #714b3d; background: #f4eae1; font-size: 14px; line-height: 1.5; }
+.pantry-stock-warning strong { display: block; margin-bottom: 5px; color: #713d2d; }
+.pantry-stock-warning p { margin: 3px 0; }
+.blend-missing-data { padding: 9px 10px; color: #654d3f !important; background: #f3eee6; }
 .empty-inline { display: grid; gap: 5px; padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink); font-family: var(--serif); font-size: 16px; }
 .empty-inline span + span { color: var(--muted); font-family: 'Avenir Next', Avenir, sans-serif; font-size: 11px; }
 .flour-form-section { padding: 21px 22px 19px; border: 1px solid var(--line); border-radius: 5px; background: rgba(251,249,243,.74); scroll-margin-top: 85px; }
@@ -483,6 +511,9 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .hero-copy h2 { font-size: 32px; }
   .hero-art { transform: scale(.9); }
   .flour-catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .catalogue-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .catalogue-search { grid-column: span 2; }
+  .catalogue-filters .field select { min-width: 0; }
   .builder-layout { grid-template-columns: minmax(0, 1fr) 280px; }
   .recipe-card { grid-template-columns: 42px minmax(0,1fr) auto; }
   .recipe-stats { grid-column: 2 / -1; grid-row: 2; }
@@ -707,6 +738,27 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .assisted-subheading > span, .yeast-conversion-row,
   .assisted-disclosure summary, .assisted-disclosure > p { font-size: 14px; line-height: 1.5; }
   .assisted-disclosure summary { min-height: 44px; }
+  .flour-library-tabs { margin-inline: -3px; }
+  .flour-library-tabs button { flex: 1 0 auto; padding-inline: 11px; font-size: 14px; }
+  .catalogue-sort { width: 100%; }
+  .pantry-filters { grid-template-columns: 1fr; gap: 10px; }
+  .pantry-row { grid-template-columns: 38px minmax(0, 1fr) 44px; gap: 10px; padding: 14px 0; }
+  .pantry-product { grid-column: 2 / -1; }
+  .pantry-quantity, .pantry-notes { grid-column: 1 / -1; }
+  .pantry-row > .icon-button { grid-column: 3; grid-row: 1; }
+  .pantry-product strong { font-size: 17px; }
+  .pantry-product span, .pantry-product a { font-size: 14px; }
+  .pantry-quantity > span, .pantry-notes > span { font-size: 14px; }
+  .pantry-stock-warning { font-size: 14px; }
+  .catalogue-sort > span { font-size: 14px; }
+  .catalogue-sort select { min-height: 44px; font-size: 16px; }
+  .official-verification, .official-spec-details, .official-source-link,
+  .prepared-mix-warning, .catalogue-result-count { font-size: 14px; line-height: 1.5; }
+  .catalogue-filters .field > span { font-size: 14px; }
+  .official-tag { font-size: 11px; letter-spacing: 0; }
+  .official-spec-details summary, .official-archive > summary { min-height: 44px; font-size: 14px; }
+  .official-properties small { font-size: 13px; }
+  .pantry-card-action { min-height: 44px; font-size: 14px; }
   .backup-actions { justify-content: start; }
   .feedback-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 9px; }
   .feedback-form-section { padding: 17px 0; }
@@ -730,8 +782,9 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .official-properties { gap: 11px; font-size: 14px; }
   .official-properties small { font-size: 12px; }
   .catalogue-result-count, .official-verification, .official-spec-details,
-  .prepared-mix-warning, .official-source-link { font-size: 13px; }
+  .prepared-mix-warning, .official-source-link, .official-archive-row span { font-size: 14px; line-height: 1.5; }
   .official-spec-details summary, .official-archive > summary { font-size: 14px; }
+  .official-properties small { font-size: 14px; }
   .official-archive-row strong { font-size: 14px; }
   .official-archive-row span { font-size: 13px; }
 }
