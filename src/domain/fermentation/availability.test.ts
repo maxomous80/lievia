@@ -10,7 +10,7 @@ function makePhase(id: string, type: FermentationPhase['type'], durationMinutes:
   return { id, type, durationMinutes, startAt: '', endAt: '', environment, temperatureC: 22, notes: '' }
 }
 
-function makeConfig(phases: FermentationPhase[], start = '2026-10-10T20:30:00.000Z'): FermentationConfig {
+function makeConfig(phases: FermentationPhase[], start = '2026-10-10T20:30:00'): FermentationConfig {
   const totalDurationMinutes = phases.reduce((sum, phase) => sum + phase.durationMinutes, 0)
   const plannedStartAt = new Date(start).toISOString()
   const bakingAt = new Date(new Date(start).getTime() + totalDurationMinutes * 60_000).toISOString()
@@ -65,7 +65,7 @@ describe('disponibilità e ottimizzazione del piano', () => {
       makePhase('bulk', 'bulk-fermentation', 735),
       makePhase('divide', 'dividing', 15),
       makePhase('proof', 'final-proof', 675),
-    ], '2026-10-10T20:50:00.000Z')
+    ], '2026-10-10T22:50:00')
     expect(optimizeFermentationSchedule(nightLock).conflicts.join(' ')).toContain('orario bloccato')
   })
 
@@ -82,7 +82,7 @@ describe('disponibilità e ottimizzazione del piano', () => {
       { ...makePhase('bulk', 'bulk-fermentation', 450), minimumDurationMinutes: 500, maximumDurationMinutes: 600 },
       makePhase('divide', 'dividing', 15),
       makePhase('proof', 'final-proof', 960),
-    ])
+    ], '2026-10-10T22:30:00')
     const optimized = optimizeFermentationSchedule(bounded)
     const bulkMinutes = optimized.config?.phases.find(({ id }) => id === 'bulk')?.durationMinutes
     expect(optimized.ok).toBe(true)
@@ -104,11 +104,11 @@ describe('disponibilità e ottimizzazione del piano', () => {
       makePhase('bulk', 'bulk-fermentation', 2000),
       makePhase('divide', 'dividing', 15),
       makePhase('proof', 'final-proof', 1570),
-    ], '2026-10-09T20:30:00.000Z')
+    ], '2026-10-09T20:30:00')
     const optimized = optimizeFermentationSchedule(config)
     expect(optimized.ok).toBe(true)
     expect(optimized.config?.bakingAt).toBe(config.bakingAt)
-    expect(new Date(optimized.config!.phases[2].startAt).getUTCDate()).toBeGreaterThan(new Date(config.plannedStartAt).getUTCDate())
+    expect(new Date(optimized.config!.phases[2].startAt).getDate()).toBeGreaterThan(new Date(config.plannedStartAt).getDate())
     expect(optimized.config?.phases.every((phase, index, phases) => index === 0 || phase.startAt === phases[index - 1].endAt)).toBe(true)
   })
 
