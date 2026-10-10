@@ -1,5 +1,5 @@
 import { HashRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { BookOpen, Calculator, FlaskConical, Home, Wheat } from 'lucide-react'
+import { BookOpen, Calculator, FlaskConical, Home, MessageCircle, Wheat } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { AppProvider } from './context/AppContext'
 import { Dashboard } from './pages/Dashboard'
@@ -10,6 +10,7 @@ import { Feedback } from './pages/Feedback'
 import './App.css'
 
 const LieviaLab = lazy(() => import('./pages/LieviaLab').then((module) => ({ default: module.LieviaLab })))
+const AskLievia = lazy(() => import('./pages/AskLievia').then((module) => ({ default: module.AskLievia })))
 
 const navigation = [
   { to: '/', label: 'Panoramica', icon: Home, end: true },
@@ -17,6 +18,7 @@ const navigation = [
   { to: '/farine', label: 'Le mie farine', icon: Wheat, end: false },
   { to: '/lab', label: 'Lievia Lab', icon: FlaskConical, end: false },
   { to: '/ricette', label: 'Le mie ricette', icon: BookOpen, end: false },
+  { to: '/chiedi', label: 'Chiedi a Lievia', icon: MessageCircle, end: false },
 ]
 
 function AppShell() {
@@ -27,6 +29,7 @@ function AppShell() {
     '/farine': 'La dispensa',
     '/lab': 'Lievia Lab',
     '/ricette': 'Il tuo ricettario',
+    '/chiedi': 'Chiedi a Lievia',
     '/esiti': 'Esiti e dati',
   }
   return (
@@ -56,6 +59,7 @@ function AppShell() {
             <Route path="/farine" element={<FlourLibrary />} />
             <Route path="/lab" element={<Suspense fallback={<p className="lab-loading">Apro Lievia Lab…</p>}><LieviaLab /></Suspense>} />
             <Route path="/ricette" element={<RecipeBook />} />
+            <Route path="/chiedi" element={<Suspense fallback={<p className="lab-loading">Apro l’assistente…</p>}><AskLievia /></Suspense>} />
             <Route path="/esiti" element={<Feedback />} />
           </Routes>
         </main>
@@ -63,7 +67,7 @@ function AppShell() {
       <nav className="mobile-nav" aria-label="Navigazione principale">
         {navigation.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `mobile-nav-link${isActive ? ' active' : ''}`}>
-            <Icon size={19} strokeWidth={1.8} /><span>{label === 'Panoramica' ? 'Home' : label === 'Crea impasto' ? 'Impasto' : label === 'Le mie farine' ? 'Farine' : label === 'Lievia Lab' ? 'Lab' : 'Ricette'}</span>
+            <Icon size={19} strokeWidth={1.8} /><span>{label === 'Panoramica' ? 'Home' : label === 'Crea impasto' ? 'Impasto' : label === 'Le mie farine' ? 'Farine' : label === 'Lievia Lab' ? 'Lab' : label === 'Le mie ricette' ? 'Ricette' : 'Chiedi'}</span>
           </NavLink>
         ))}
       </nav>

@@ -8,6 +8,7 @@ import { FermentationPlanner } from '../components/FermentationPlanner'
 import { FermentationTimeline } from '../components/FermentationTimeline'
 import { createDefaultFermentationConfig, formatDuration, formatItalianDateTime, STRATEGY_LABELS } from '../domain/fermentation/schedule'
 import { getFlourGuidance, getTemperatureGuidance } from '../domain/fermentation/guidance'
+import { validateFermentationSchedule } from '../domain/fermentation/validation'
 import { YEAST_ESTIMATOR_MODEL } from '../domain/fermentation/modelConfiguration'
 import { deriveBlendPropertyRanges, isFlourBlendEligible, missingBlendTechnicalData, type NumericRange } from '../domain/flours/blendProperties'
 import { getStockWarnings } from '../domain/flours/pantry'
@@ -154,6 +155,11 @@ export function DoughBuilder() {
       setFormError(calculationError)
       return
     }
+    const scheduleValidation = validateFermentationSchedule(fermentation)
+    if (scheduleValidation.conflicts.length) {
+      setFormError(`Non posso salvare un piano non fattibile: ${scheduleValidation.conflicts.join(' ')}`)
+      return
+    }
     const savedFermentation: FermentationConfig = {
       ...fermentation,
       estimatorModelId: YEAST_ESTIMATOR_MODEL.id,
@@ -188,11 +194,15 @@ export function DoughBuilder() {
     window.print()
   }
 
+  const scheduleValidation = validateFermentationSchedule(fermentation)
   const fermentationWarnings = [
-    ...getTemperatureGuidance(fermentation),
-    ...getFlourGuidance(guidanceInput),
-  ].map((warning) => warning.message)
-  if (!fermentation.planConfirmed || fermentation.phases.reduce((sum, phase) => sum + phase.durationMinutes, 0) !== fermentation.totalDurationMinutes) {
+    scheduleValidation.status,
+    ...scheduleValidation.conflicts,
+    ...scheduleValidation.uncertainty,
+    ...getTemperatureGuidance(fermentation).map((warning) => warning.message),
+    ...getFlourGuidance(guidanceInput).map((warning) => warning.message),
+  ]
+  if (!fermentation.planConfirmed) {
     fermentationWarnings.unshift('Il piano di fermentazione è ancora da verificare.')
   }
 

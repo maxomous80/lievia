@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeRecipes } from './migration'
 import { DEFAULT_USER_AVAILABILITY, isWithinAvailableHours, optimizeFermentationSchedule } from './availability'
-import { buildSchedule, createDefaultFermentationConfig, updatePhase } from './schedule'
+import { buildSchedule, createDefaultFermentationConfig, updatePhase, updateTotalDuration } from './schedule'
 import type { FermentationConfig, FermentationPhase } from './types'
 import { createDefaultDraft } from '../../data/defaults'
 
@@ -16,6 +16,7 @@ function makeConfig(phases: FermentationPhase[], start = '2026-10-10T20:30:00'):
   const bakingAt = new Date(new Date(start).getTime() + totalDurationMinutes * 60_000).toISOString()
   const config = {
     ...createDefaultFermentationConfig(new Date(start)),
+    strategy: 'custom' as const,
     plannedStartAt,
     bakingAt,
     totalDurationMinutes,
@@ -74,6 +75,13 @@ describe('disponibilità e ottimizzazione del piano', () => {
     const result = optimizeFermentationSchedule(config)
     expect(result.ok).toBe(false)
     expect(result.conflicts.join(' ')).toContain('Non c’è una finestra disponibile')
+  })
+
+  it('rifiuta fasi richieste azzerate anche quando il vincolo di disponibilità è spento', () => {
+    const config = updateTotalDuration(createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z')), 60)
+    const result = optimizeFermentationSchedule({ ...config, availability: { ...config.availability, avoidRestHours: false } })
+    expect(result.ok).toBe(false)
+    expect(result.conflicts.join(' ')).toContain('durata zero')
   })
 
   it('rispetta i limiti espliciti delle fasi flessibili e segnala limiti incompatibili', () => {

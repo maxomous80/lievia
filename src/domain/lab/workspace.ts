@@ -140,7 +140,7 @@ export function normalizeLabWorkspace(value: unknown): LabWorkspace {
   const sessions = value.sessions.flatMap((candidate) => {
     const session = normalizeSession(candidate)
     return session ? [session] : []
-  }).slice(-20)
+  })
   const requestedActive = typeof value.activeSessionId === 'string' ? value.activeSessionId : null
   return {
     version: 1,
@@ -159,7 +159,7 @@ function normalizeSession(value: unknown): LabSession | null {
       typeof candidate.createdAt !== 'string' || typeof candidate.updatedAt !== 'string') return []
     const configuration = normalizeRecipeConfiguration(candidate.configuration)
     return configuration ? [{ id: candidate.id, name: candidate.name, configuration, createdAt: candidate.createdAt, updatedAt: candidate.updatedAt }] : []
-  }).slice(0, 50)
+  })
   if (!scenarios.length) return null
   const selectedScenarioId = typeof value.selectedScenarioId === 'string' && scenarios.some(({ id }) => id === value.selectedScenarioId)
     ? value.selectedScenarioId

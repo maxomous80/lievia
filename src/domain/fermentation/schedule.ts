@@ -169,15 +169,25 @@ export function applyStrategyTemplate(
   durationMinutes = config.totalDurationMinutes,
 ): FermentationConfig {
   const phases = createStrategyPhases(strategy, durationMinutes, config.ambientTemperatureC, config.refrigeratorTemperatureC)
+  const lockedIdsByType = new Map<FermentationPhaseType, string[]>([])
+  for (const phase of config.phases.filter((candidate) => candidate.boundaryLocked)) {
+    lockedIdsByType.set(phase.type, [...(lockedIdsByType.get(phase.type) ?? []), phase.id])
+  }
+  const phasesWithLocks = phases.map((phase) => {
+    const lockedId = lockedIdsByType.get(phase.type)?.shift()
+    return lockedId ? { ...phase, id: lockedId, boundaryLocked: true } : phase
+  })
   const bakeAnchor = config.timeAnchor === 'bake' ? parseLocalDateTime(config.bakingAt) : undefined
   const start = bakeAnchor ? calculateStartFromBake(bakeAnchor, durationMinutes) : parseLocalDateTime(config.plannedStartAt)
   const bakingAt = bakeAnchor ?? calculateBakeFromStart(start, durationMinutes)
+  const scheduled = buildSchedule(phasesWithLocks, start, durationMinutes)
+  preserveLockedBoundaries(config.phases, scheduled)
   return {
     ...config,
     strategy,
     totalDurationMinutes: durationMinutes,
     bakingAt: bakingAt.toISOString(),
-    phases: buildSchedule(phases, start, durationMinutes),
+    phases: scheduled,
     planConfirmed: true,
   }
 }
@@ -293,7 +303,8 @@ function preserveLockedBoundaries(previous: FermentationPhase[], next: Fermentat
   const nextById = new Map(next.map((phase) => [phase.id, phase]))
   for (const phase of previous.filter((candidate) => candidate.boundaryLocked)) {
     const updated = nextById.get(phase.id)
-    if (updated && (updated.startAt !== phase.startAt || updated.endAt !== phase.endAt)) {
+    if (!updated) throw new RangeError(`L’operazione bloccata “${PHASE_LABELS[phase.type]}” non può essere rimossa o sostituita senza sbloccarla.`)
+    if (updated.startAt !== phase.startAt || updated.endAt !== phase.endAt) {
       throw new RangeError(`L’operazione bloccata “${PHASE_LABELS[phase.type]}” non può essere spostata senza sbloccarla.`)
     }
   }
@@ -314,12 +325,12 @@ function resizePhases(phases: FermentationPhase[], newTotal: number): Fermentati
     phase.maximumDurationMinutes !== undefined && phase.durationMinutes > phase.maximumDurationMinutes)) {
     throw new RangeError('Una durata fissa di un’operazione manuale viola i limiti configurati')
   }
-  let durations = flexible.map((phase) => Math.max(phase.minimumDurationMinutes ?? 0, Math.min(phase.durationMinutes, phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY)))
+  let durations = flexible.map((phase) => phase.skipped ? 0 : Math.max(phase.minimumDurationMinutes ?? 0, Math.min(phase.durationMinutes, phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY)))
   let delta = variableTotal - durations.reduce((sum, duration) => sum + duration, 0)
   for (const [index, phase] of flexible.entries()) {
     if (delta === 0) break
-    const minimum = phase.minimumDurationMinutes ?? 0
-    const maximum = phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
+    const minimum = phase.skipped ? 0 : phase.minimumDurationMinutes ?? 0
+    const maximum = phase.skipped ? 0 : phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
     if (!Number.isFinite(minimum) || minimum < 0 || Number.isNaN(maximum) || maximum < minimum) {
       throw new RangeError(`I limiti configurati per “${PHASE_LABELS[phase.type]}” non sono validi`)
     }

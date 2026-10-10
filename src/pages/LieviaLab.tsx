@@ -340,7 +340,7 @@ function BlendSummary({ configuration, flours }: { configuration: RecipeConfigur
 
 function ScheduleSummary({ result }: { result: ReturnType<typeof calculateScenario> }) {
   const schedule = result.schedule.candidate ?? result.schedule.current
-  return <div className="lab-schedule-summary"><div className="lab-schedule-title"><h3>Piano · {formatDuration(schedule.totalDurationMinutes)}</h3><span className={result.schedule.feasible ? 'lab-schedule-ok' : 'lab-schedule-conflict'}>{result.schedule.feasible ? 'Vincoli pratici rispettati' : 'Conflitto di pianificazione'}</span></div><FermentationTimeline config={schedule} compact /><p>Cottura · {formatDate(schedule.bakingAt)}</p>{result.schedule.conflicts.map((conflict) => <p className="lab-schedule-conflict" key={conflict}>{conflict}</p>)}</div>
+  return <div className="lab-schedule-summary"><div className="lab-schedule-title"><h3>Piano · {formatDuration(schedule.totalDurationMinutes)}</h3><span className={result.schedule.feasible ? 'lab-schedule-ok' : 'lab-schedule-conflict'}>{result.schedule.validation.status}</span></div><FermentationTimeline config={schedule} compact /><p>Cottura · {formatDate(schedule.bakingAt)}</p>{result.schedule.conflicts.map((conflict) => <p className="lab-schedule-conflict" role="alert" key={conflict}>{conflict}</p>)}{result.schedule.validation.uncertainty.map((warning) => <p className="lab-schedule-conflict" key={warning}>{warning}</p>)}</div>
 }
 
 function ScheduleCard({ label, result }: { label: string; result: ReturnType<typeof calculateScenario> }) {

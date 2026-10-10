@@ -3,6 +3,7 @@ import type { FermentationConfig, FermentationPhase, FermentationPhaseType, Ferm
 import { getFlourGuidance, getTemperatureGuidance } from '../fermentation/guidance'
 import { isManualPhase, optimizeFermentationSchedule } from '../fermentation/availability'
 import { PHASE_LABELS, setScheduleAnchor, updateTotalDuration } from '../fermentation/schedule'
+import { validateFermentationSchedule, type ScheduleValidation } from '../fermentation/validation'
 import { deriveBlendPropertyRanges, missingBlendTechnicalData } from '../flours/blendProperties'
 import { getStockWarnings, type PantryEntry, type PantryStockWarning } from '../flours/pantry'
 import { calculateDough, type DoughResult } from '../../lib/calculator'
@@ -64,6 +65,7 @@ export interface ScenarioCalculation {
   schedule: {
     current: FermentationConfig
     feasible: boolean
+    validation: ScheduleValidation
     candidate?: FermentationConfig
     conflicts: string[]
     operations: Array<{ phaseId: string; label: string; startAt: string; endAt: string }>
@@ -252,15 +254,17 @@ export function calculateScenario(scenarioId: string, name: string, configuratio
     ...getFlourGuidance({ blend: configuration.flourBlend, flours: guidanceFlours, durationMinutes: configuration.fermentation.totalDurationMinutes, hydrationPct: configuration.hydrationPct, style: configuration.style }),
   ].map(({ message }) => message)
   const optimization = optimizeFermentationSchedule(configuration.fermentation)
+  const validation = validateFermentationSchedule(optimization.config ?? configuration.fermentation)
   return {
     scenarioId, name, configuration: cloneRecipeConfiguration(configuration), dough, calculationError,
     blendProperties, missingFlourData, stockWarnings, warnings,
     schedule: {
       current: configuration.fermentation,
       feasible: optimization.ok,
+      validation,
       candidate: optimization.config,
       conflicts: optimization.conflicts,
-      operations: (optimization.config ?? configuration.fermentation).phases.filter(isManualPhase).map((phase) => ({
+      operations: (optimization.config ?? configuration.fermentation).phases.filter((phase) => isManualPhase(phase) && !phase.skipped).map((phase) => ({
         phaseId: phase.id, label: PHASE_LABELS[phase.type], startAt: phase.startAt, endAt: phase.endAt,
       })),
     },
@@ -359,6 +363,7 @@ function validateFermentationPatch(value: unknown, issues: PatchIssue[]) {
   if (value.phases !== undefined) {
     if (!Array.isArray(value.phases) || !value.phases.every(isFermentationPhase)) issues.push({ field: 'fermentation.phases', message: 'Le fasi contengono valori non validi.' })
     else if (value.totalDurationMinutes !== undefined && value.phases.reduce((total, phase) => total + phase.durationMinutes, 0) !== value.totalDurationMinutes) issues.push({ field: 'fermentation.phases', message: 'La somma delle fasi deve coincidere con la durata totale.' })
+    else if (value.phases.some((phase) => (phase.optional !== undefined && typeof phase.optional !== 'boolean') || (phase.skipped !== undefined && typeof phase.skipped !== 'boolean'))) issues.push({ field: 'fermentation.phases', message: 'Le opzioni di fase non sono valide.' })
   }
   if (value.yeastType !== undefined && !yeastTypes.has(value.yeastType as YeastType)) issues.push({ field: 'fermentation.yeastType', message: 'Il tipo di lievito del piano non è valido.' })
   if (value.planConfirmed !== undefined && typeof value.planConfirmed !== 'boolean') issues.push({ field: 'fermentation.planConfirmed', message: 'Stato del piano non valido.' })

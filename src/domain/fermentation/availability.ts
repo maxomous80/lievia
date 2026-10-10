@@ -1,5 +1,7 @@
 import { addDays, addMinutes, setHours, setMinutes, startOfDay } from 'date-fns'
 import type { FermentationConfig, FermentationPhase, UserAvailability } from './types'
+import { isWithinAvailableHours, validateFermentationSchedule } from './validation'
+export { isWithinAvailableHours } from './validation'
 
 export interface ScheduleOptimizationResult {
   ok: boolean
@@ -19,27 +21,10 @@ export function isManualPhase(phase: FermentationPhase) {
   return manualPhaseTypes.has(phase.type)
 }
 
-export function isWithinAvailableHours(startAt: Date, endAt: Date, availability: UserAvailability) {
-  if (!availability.avoidRestHours || startAt.getTime() === endAt.getTime()) return true
-  if (endAt < startAt || !isValidTime(availability.unavailableStart) || !isValidTime(availability.unavailableEnd)) return false
-  const [unavailableStartHour, unavailableStartMinute] = availability.unavailableStart.split(':').map(Number)
-  const [unavailableEndHour, unavailableEndMinute] = availability.unavailableEnd.split(':').map(Number)
-  const unavailableStart = unavailableStartHour * 60 + unavailableStartMinute
-  const unavailableEnd = unavailableEndHour * 60 + unavailableEndMinute
-  if (unavailableStart === unavailableEnd) return true
-
-  for (let cursor = new Date(startAt); cursor < endAt; cursor = addMinutes(cursor, 1)) {
-    const minuteOfDay = cursor.getHours() * 60 + cursor.getMinutes()
-    const unavailable = unavailableStart < unavailableEnd
-      ? minuteOfDay >= unavailableStart && minuteOfDay < unavailableEnd
-      : minuteOfDay >= unavailableStart || minuteOfDay < unavailableEnd
-    if (unavailable) return false
-  }
-  return true
-}
-
 export function optimizeFermentationSchedule(config: FermentationConfig): ScheduleOptimizationResult {
   const availability = config.availability
+  const validation = validateFermentationSchedule(config, { checkDurationBounds: !availability?.avoidRestHours, checkAvailability: false })
+  if (validation.conflicts.length) return { ok: false, conflicts: validation.conflicts }
   if (!availability?.avoidRestHours) return { ok: true, config, conflicts: [] }
   if (!isValidTime(availability.unavailableStart) || !isValidTime(availability.unavailableEnd)) {
     return failed('Gli orari di indisponibilità non sono validi.')
@@ -96,11 +81,10 @@ export function optimizeFermentationSchedule(config: FermentationConfig): Schedu
     return failed('Le durate minime o massime delle fasi non consentono di raggiungere l’orario di cottura.')
   }
 
-  return {
-    ok: true,
-    config: { ...config, plannedStartAt: startAt.toISOString(), phases: result },
-    conflicts: [],
-  }
+  const optimized = { ...config, plannedStartAt: startAt.toISOString(), phases: result }
+  const optimizedValidation = validateFermentationSchedule(optimized)
+  if (optimizedValidation.conflicts.length) return { ok: false, conflicts: optimizedValidation.conflicts }
+  return { ok: true, config: optimized, conflicts: [] }
 }
 
 function scheduleSegment(
@@ -209,8 +193,8 @@ function getDurationBounds(phases: FermentationPhase[]) {
   let minimum = 0
   let maximum = 0
   for (const phase of phases) {
-    const phaseMinimum = phase.minimumDurationMinutes ?? 0
-    const phaseMaximum = phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
+    const phaseMinimum = phase.skipped ? 0 : Math.max(1, phase.minimumDurationMinutes ?? 0)
+    const phaseMaximum = phase.skipped ? 0 : phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
     if (!Number.isFinite(phaseMinimum) || phaseMinimum < 0 || Number.isNaN(phaseMaximum) || phaseMaximum < phaseMinimum || phaseMaximum < 0) return undefined
     minimum += phaseMinimum
     maximum += phaseMaximum
@@ -221,14 +205,14 @@ function getDurationBounds(phases: FermentationPhase[]) {
 function allocateDurations(phases: FermentationPhase[], total: number) {
   const bounds = getDurationBounds(phases)
   if (!bounds || total < bounds.minimum || total > bounds.maximum) return undefined
-  const durations = phases.map((phase) => Math.max(phase.minimumDurationMinutes ?? 0, Math.min(phase.durationMinutes, phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY)))
+  const durations = phases.map((phase) => phase.skipped ? 0 : Math.max(1, phase.minimumDurationMinutes ?? 0, Math.min(phase.durationMinutes, phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY)))
   let delta = total - durations.reduce((sum, duration) => sum + duration, 0)
   const indices = phases.map((_, index) => index)
   for (const index of indices) {
     if (delta === 0) break
     const phase = phases[index]
-    const minimum = phase.minimumDurationMinutes ?? 0
-    const maximum = phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
+    const minimum = phase.skipped ? 0 : Math.max(1, phase.minimumDurationMinutes ?? 0)
+    const maximum = phase.skipped ? 0 : phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
     const change = delta > 0 ? Math.min(delta, maximum - durations[index]) : -Math.min(-delta, durations[index] - minimum)
     durations[index] += change
     delta -= change

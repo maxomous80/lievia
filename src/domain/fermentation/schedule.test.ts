@@ -5,6 +5,7 @@ import { getFlourGuidance, getTemperatureGuidance } from './guidance'
 import { normalizeRecipes } from './migration'
 import {
   buildSchedule,
+  applyStrategyTemplate,
   calculateBakeFromStart,
   calculateStartFromBake,
   createDefaultFermentationConfig,
@@ -14,6 +15,7 @@ import {
   updateTotalDuration,
 } from './schedule'
 import { estimateYeast } from './yeast'
+import { validateFermentationSchedule } from './validation'
 import type { FermentationPhase } from './types'
 
 const phase = (id: string, durationMinutes: number): FermentationPhase => ({
@@ -73,6 +75,30 @@ describe('pianificazione temporale', () => {
     expect(new Date(resized.plannedStartAt).getTime()).toBe(new Date(config.bakingAt).getTime() - 1820 * 60_000)
   })
 
+  it('segnala come non fattibile il modello combinato di un’ora senza cambiare la cottura o il lievito', () => {
+    const config = createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z'))
+    const resized = updateTotalDuration(config, 60)
+    expect(resized.phases.find(({ type }) => type === 'bulk-fermentation')?.durationMinutes).toBe(0)
+    expect(resized.phases.find(({ type }) => type === 'refrigeration')?.durationMinutes).toBe(0)
+    expect(validateFermentationSchedule(resized).status).toBe('Piano non fattibile')
+    expect(validateFermentationSchedule(resized).temporal).toBe('coerente')
+    expect(validateFermentationSchedule(resized).strategy).toBe('incoerente')
+    expect(resized.bakingAt).toBe(config.bakingAt)
+    expect(resized.yeastType).toBe(config.yeastType)
+    expect(resized.planConfirmed).toBe(config.planConfirmed)
+  })
+
+  it('accetta solo fasi opzionali saltate esplicitamente e lascia intatto il resto del piano', () => {
+    const config = createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z'))
+    const phases = config.phases.map((item) => item.type === 'initial-rest'
+      ? { ...item, optional: true, skipped: true, durationMinutes: 0 }
+      : item.type === 'bulk-fermentation' ? { ...item, durationMinutes: item.durationMinutes + 20 } : item)
+    const skipped = { ...config, availability: { ...config.availability, avoidRestHours: false }, phases: buildSchedule(phases, config.plannedStartAt, config.totalDurationMinutes) }
+    expect(validateFermentationSchedule(skipped).conflicts).toEqual([])
+    expect(validateFermentationSchedule(skipped).status).toBe('Piano temporalmente coerente')
+    expect(validateFermentationSchedule({ ...skipped, yeastMode: 'assisted' }).status).toBe('Piano con avvertenze')
+  })
+
   it('attraversa il salto DST con durata di tempo trascorso coerente', () => {
     const start = new Date('2026-03-08T06:30:00.000Z')
     const bake = calculateBakeFromStart(start, 120)
@@ -94,6 +120,14 @@ describe('pianificazione temporale', () => {
     expect(schedule.filter((item) => item.type === 'refrigeration')[0].temperatureC).toBe(5)
     expect(schedule.some((item) => item.type === 'dividing')).toBe(true)
     expect(schedule.some((item) => item.environment === 'refrigerator' && item.type === 'final-proof')).toBe(false)
+  })
+
+  it('non sostituisce né sposta un’operazione bloccata quando cambia il template', () => {
+    const config = createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z'))
+    const locked = updatePhase(config, config.phases.find(({ type }) => type === 'dividing')!.id, { boundaryLocked: true })
+    expect(() => applyStrategyTemplate(locked, 'room-temperature')).toThrow(/bloccata/)
+    expect(locked.bakingAt).toBe(config.bakingAt)
+    expect(locked.phases.find(({ type }) => type === 'dividing')?.boundaryLocked).toBe(true)
   })
 
   it('non genera una raccomandazione numerica di lievito senza modello calibrato', () => {

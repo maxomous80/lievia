@@ -91,9 +91,11 @@ function normalizePhases(value: unknown, ambient: number, refrigerator: number):
       temperatureC: finite(entry.temperatureC) ?? (environment === 'refrigerator' ? refrigerator : ambient),
       measuredDoughTemperatureC: finite(entry.measuredDoughTemperatureC),
       notes: typeof entry.notes === 'string' ? entry.notes : typeof entry.note === 'string' ? entry.note : '',
-      minimumDurationMinutes: finite(entry.minimumDurationMinutes),
-      maximumDurationMinutes: finite(entry.maximumDurationMinutes),
+      minimumDurationMinutes: entry.skipped === true ? undefined : finite(entry.minimumDurationMinutes),
+      maximumDurationMinutes: entry.skipped === true ? undefined : finite(entry.maximumDurationMinutes),
       boundaryLocked: entry.boundaryLocked === true,
+      optional: entry.optional === true,
+      skipped: entry.skipped === true,
     })
   }
   return phases

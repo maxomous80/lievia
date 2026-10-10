@@ -18,6 +18,7 @@ import {
   updateTotalDuration,
 } from '../domain/fermentation/schedule'
 import type { FermentationConfig, FermentationPhaseType, FlourGuidanceInput } from '../domain/fermentation/types'
+import { validateFermentationSchedule } from '../domain/fermentation/validation'
 import type { YeastType } from '../models'
 
 const editableTypes: FermentationPhaseType[] = ['mixing', 'initial-rest', 'bulk-fermentation', 'folding', 'dividing', 'refrigeration', 'final-proof']
@@ -61,7 +62,8 @@ export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flo
     ...getFlourGuidance({ ...guidanceInput, durationMinutes: config.totalDurationMinutes }),
   ]
   const phasesTotal = config.phases.reduce((sum, phase) => sum + phase.durationMinutes, 0)
-  const planValid = config.phases.length > 0 && phasesTotal === config.totalDurationMinutes && config.totalDurationMinutes > 0
+  const validation = validateFermentationSchedule(config)
+  const planValid = config.phases.length > 0 && phasesTotal === config.totalDurationMinutes && config.totalDurationMinutes > 0 && validation.conflicts.length === 0
   const yeastGrams = flourWeight * yeastPct / 100
   const localDurationHours = Math.floor(config.totalDurationMinutes / 60)
   const localDurationMinutes = config.totalDurationMinutes % 60
@@ -111,6 +113,25 @@ export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flo
 
   function changePhase(phaseId: string, changes: Parameters<typeof updatePhase>[2]) {
     try { onChange(updatePhase(config, phaseId, changes)); setOptimizationConflicts([]) } catch (error) { reportScheduleEditError(error) }
+  }
+
+  function suggestMoreTime(extraMinutes: number) {
+    try {
+      const proposed = updateTotalDuration({ ...config, planConfirmed: true }, config.totalDurationMinutes + extraMinutes)
+      const start = new Date(proposed.plannedStartAt).toLocaleString('it-IT')
+      const bake = new Date(proposed.bakingAt).toLocaleString('it-IT')
+      if (!window.confirm(`La preparazione inizierebbe ${extraMinutes} minuti prima (${start}); la cottura resterebbe alle ${bake}. La dose di lievito resta invariata. Applicare la proposta?`)) return
+      onChange(proposed)
+      setOptimizationConflicts([])
+    } catch (error) { reportScheduleEditError(error) }
+  }
+
+  function suggestRoomTemperature() {
+    let proposed: FermentationConfig
+    try { proposed = applyStrategyTemplate({ ...config, strategy: 'room-temperature' }, 'room-temperature') } catch (error) { reportScheduleEditError(error); return }
+    if (!window.confirm('La proposta sostituisce le fasi con un modello a temperatura ambiente e conserva l’orario di cottura. Rivedi le durate prima di confermare; la dose di lievito resta invariata. Applicare?')) return
+    onChange({ ...proposed, planConfirmed: false })
+    setOptimizationConflicts([])
   }
 
   function applyTemplate() {
@@ -166,8 +187,9 @@ export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flo
     <section className="form-section fermentation-editor" aria-labelledby="fermentation-title">
       <div className="form-section-heading"><span className="step-index">05</span><div><h2 id="fermentation-title">Lievitazione assistita</h2><p>Pianifica le fasi e confronta condizioni e tempi senza confondere la stima termica con una previsione biologica.</p></div></div>
       {!config.planConfirmed && <div className="plan-status incomplete"><AlertTriangle size={15} /><span>Piano iniziale da verificare e confermare</span></div>}
-      {config.planConfirmed && !planValid && <div className="plan-status incomplete"><AlertTriangle size={15} /><span>Piano incompleto: verifica le durate delle fasi.</span></div>}
-      {config.planConfirmed && planValid && <div className="plan-status complete"><Check size={15} /><span>Le fasi coprono tutta la finestra disponibile.</span></div>}
+      {config.planConfirmed && <div className={`plan-status ${planValid ? 'complete' : 'incomplete'}`} role={planValid ? 'status' : 'alert'}>{planValid ? <Check size={15} /> : <AlertTriangle size={15} />}<span>{validation.status}</span></div>}
+      {validation.conflicts.length > 0 && <div className="scheduling-conflict" role="alert"><strong>Conflitti del piano</strong>{validation.conflicts.map((conflict) => <p key={conflict}>{conflict}</p>)}</div>}
+      {validation.uncertainty.map((item) => <p className="temperature-help" key={item}>{item}</p>)}
 
       <div className="fermentation-subsection"><div className="subsection-title"><Clock3 size={15} /><h3>Quando vuoi infornare?</h3></div>
         <div className="field-row time-anchor-switch"><div className="segmented-control"><button className={config.timeAnchor === 'bake' ? 'selected' : ''} type="button" onClick={() => patch({ timeAnchor: 'bake' })}>Orario di cottura</button><button className={config.timeAnchor === 'start' ? 'selected' : ''} type="button" onClick={() => patch({ timeAnchor: 'start' })}>Inizio impasto</button></div></div>
@@ -184,7 +206,8 @@ export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flo
         </div>
         {schedulingConflicts.length > 0 && <div className="scheduling-conflict" role="status"><strong>Conflitti di orario</strong>{schedulingConflicts.map((conflict) => <p key={conflict}>{conflict}</p>)}</div>}
         <button className="button button-outline optimize-schedule-button" type="button" disabled={!config.availability.avoidRestHours} onClick={optimizeSchedule}>Trova orari pratici</button>
-        {optimizationConflicts.length > 0 && <><div className="scheduling-conflict" role="alert"><strong>Non è possibile rispettare tutti i vincoli con gli orari attuali.</strong>{optimizationConflicts.map((conflict) => <p key={conflict}>{conflict}</p>)}</div><div className="practical-suggestions"><strong>Suggerimenti pratici</strong><p>Prova ad ampliare la finestra di disponibilità, rivedi i limiti delle fasi flessibili o sblocca l’operazione manuale incompatibile. La dose di lievito e l’orario di cottura non vengono modificati.</p></div></>}
+        {optimizationConflicts.length > 0 && <div className="scheduling-conflict" role="alert"><strong>Conflitti di orario</strong>{optimizationConflicts.map((conflict) => <p key={conflict}>{conflict}</p>)}</div>}
+        {(optimizationConflicts.length > 0 || validation.conflicts.length > 0) && <div className="practical-suggestions"><strong>Proposte da verificare</strong><p>Ogni modifica mostra prima l’effetto sugli orari. Le proposte temporali conservano la cottura e la dose di lievito.</p><div className="suggestion-actions"><button className="button button-outline" type="button" onClick={() => suggestMoreTime(60)}>Anticipa la preparazione</button><button className="button button-outline" type="button" onClick={() => suggestMoreTime(120)}>Aumenta il tempo disponibile</button><button className="button button-outline" type="button" onClick={suggestRoomTemperature}>Modifica la strategia</button><button className="button button-outline" type="button" onClick={() => { setShowPhases(true); document.querySelector('.phase-edit-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>Rivedi le fasi opzionali</button></div></div>}
       </div>
 
       <div className="fermentation-subsection"><div className="subsection-title"><Thermometer size={15} /><h3>Temperature rilevate o impostate</h3></div>
@@ -205,7 +228,7 @@ export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flo
             <div className="phase-edit-fields"><div className="phase-duration-control"><span>Durata</span><div className="phase-duration-inputs"><label><input type="number" min="0" step="1" aria-label={`Ore fase ${index + 1}`} value={hours} onChange={(event) => changePhase(phase.id, { durationMinutes: Number(event.target.value) * 60 + minutes })} /><small>ore</small></label><label><input type="number" min="0" max="59" step="1" aria-label={`Minuti fase ${index + 1}`} value={minutes} onChange={(event) => changePhase(phase.id, { durationMinutes: hours * 60 + Number(event.target.value) })} /><small>min</small></label></div></div><label className="field phase-environment-field"><span>Ambiente della fase</span><select value={phase.environment} onChange={(event) => { const environment = event.target.value as typeof phase.environment; changePhase(phase.id, { environment, temperatureC: tempForEnvironment(config, environment) }) }}><option value="ambient">Ambiente</option><option value="refrigerator">Frigorifero</option><option value="dough">Temperatura impasto</option><option value="custom">Personalizzata</option></select></label><label className="field phase-temp-field"><span>Temperatura ambiente fase</span><div className="input-with-unit"><input type="number" step="0.5" aria-label={`Temperatura ambiente fase ${index + 1}`} value={phase.temperatureC} onChange={(event) => changePhase(phase.id, { temperatureC: Number(event.target.value) })} /><small>°C</small></div></label></div>
             <label className="field phase-measured-temp"><span>Impasto misurato all’inizio della fase <small>facoltativa</small></span><div className="input-with-unit"><input type="number" min="-10" max="50" step="0.5" aria-label={`Temperatura impasto misurata fase ${index + 1}`} value={phase.measuredDoughTemperatureC ?? ''} placeholder="—" onChange={(event) => changePhase(phase.id, { measuredDoughTemperatureC: event.target.value === '' ? undefined : Number(event.target.value) })} /><small>°C</small></div></label>
             {isManualPhase(phase) && <label className="check-line phase-lock"><input type="checkbox" checked={phase.boundaryLocked === true} onChange={(event) => changePhase(phase.id, { boundaryLocked: event.target.checked })} /><span>Blocca l’orario di questa operazione</span></label>}
-            {!isManualPhase(phase) && <details className="phase-duration-limits"><summary>Limiti facoltativi della durata</summary><div><label className="field"><span>Minimo, minuti</span><input type="number" min="0" value={phase.minimumDurationMinutes ?? ''} onChange={(event) => changePhase(phase.id, { minimumDurationMinutes: event.target.value === '' ? undefined : Number(event.target.value) })} /></label><label className="field"><span>Massimo, minuti</span><input type="number" min="0" value={phase.maximumDurationMinutes ?? ''} onChange={(event) => changePhase(phase.id, { maximumDurationMinutes: event.target.value === '' ? undefined : Number(event.target.value) })} /></label></div></details>}
+            <details className="phase-duration-limits"><summary>Opzioni avanzate e limiti facoltativi</summary><label className="check-line"><input type="checkbox" checked={phase.optional === true} onChange={(event) => changePhase(phase.id, { optional: event.target.checked, skipped: false, durationMinutes: phase.skipped ? 30 : phase.durationMinutes })} /><span>Fase facoltativa</span></label>{phase.optional && <><label className="check-line"><input type="checkbox" checked={phase.skipped === true} onChange={(event) => changePhase(phase.id, { optional: true, skipped: event.target.checked, durationMinutes: event.target.checked ? 0 : 30 })} /><span>Salta esplicitamente questa fase</span></label><small>La durata totale diminuisce; con cottura fissata, la preparazione inizierà più tardi.</small></>}{!isManualPhase(phase) && <div><label className="field"><span>Minimo, minuti</span><input type="number" min="0" value={phase.minimumDurationMinutes ?? ''} onChange={(event) => changePhase(phase.id, { minimumDurationMinutes: event.target.value === '' ? undefined : Number(event.target.value) })} /></label><label className="field"><span>Massimo, minuti</span><input type="number" min="0" value={phase.maximumDurationMinutes ?? ''} onChange={(event) => changePhase(phase.id, { maximumDurationMinutes: event.target.value === '' ? undefined : Number(event.target.value) })} /></label></div>}</details>
             <label className="field phase-notes-field"><span>Note</span><textarea rows={2} value={phase.notes} placeholder="Aggiungi una nota alla fase" onChange={(event) => changePhase(phase.id, { notes: event.target.value })} /></label>
             <p className="phase-time-caption">{formatDuration(phase.durationMinutes)} · {new Date(phase.startAt).toLocaleString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} – {new Date(phase.endAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</p>
           </article>

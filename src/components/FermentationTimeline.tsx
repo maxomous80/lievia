@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
 import { environmentLabel, formatDuration, PHASE_LABELS } from '../domain/fermentation/schedule'
 import type { FermentationConfig, FermentationPhase, FermentationPhaseType } from '../domain/fermentation/types'
+import { isSkippedOptionalPhase } from '../domain/fermentation/validation'
 
 const handsOnPhases = new Set<FermentationPhaseType>(['mixing', 'folding', 'dividing'])
 
@@ -37,7 +38,7 @@ export function FermentationTimeline({ config, compact = false }: { config: Ferm
     temperatureC: 0,
     notes: 'Inizio cottura previsto',
   }
-  const phases = [...config.phases, bakeEvent]
+  const phases = [...config.phases.filter((phase) => !isSkippedOptionalPhase(phase)), bakeEvent]
   return (
     <ol className={`fermentation-timeline${compact ? ' compact' : ''}`}>
       {phases.map((phase, index) => {

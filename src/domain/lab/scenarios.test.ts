@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { createDefaultDraft } from '../../data/defaults'
 import { OFFICIAL_FLOURS } from '../../data/officialFlours'
 import { createDefaultFermentationConfig } from '../fermentation/schedule'
+import { updateTotalDuration } from '../fermentation/schedule'
 import { normalizeLabWorkspace, createAlternativeScenario, createLabSession, patchScenario, prepareScenarioApplication, renameScenario, resetScenario, selectScenario } from './workspace'
 import { calculateScenario, compareScenarios, createRecipeConfiguration, validateRecipePatch, type RecipeConfiguration } from './scenarios'
 import { readStored, writeStored } from '../../lib/storage'
@@ -54,6 +55,17 @@ describe('Lievia Lab · dominio scenari', () => {
     expect(water.classification).toBe('calcolo esatto')
     expect(water.difference).toBeGreaterThan(0)
     expect(alternative.dough?.waterWeight).toBe(alternative.dough!.flourWeight * 0.75)
+  })
+
+  it('mantiene visibile nel Lab uno scenario infeasible senza applicarlo come raccomandazione', () => {
+    const base = makeConfiguration()
+    const fermentation = updateTotalDuration(base.fermentation, 60)
+    const result = calculateScenario('one-hour', 'Un’ora', { ...base, fermentation }, [], [])
+    expect(result.schedule.feasible).toBe(false)
+    expect(result.schedule.validation.status).toBe('Piano non fattibile')
+    expect(result.schedule.conflicts.join(' ')).toContain('durata positiva')
+    expect(result.schedule.current.bakingAt).toBe(base.fermentation.bakingAt)
+    expect(result.dough?.totalDoughWeight).toBeGreaterThan(0)
   })
 
   it('confronta blend, campi mancanti e disponibilità senza dichiarare equivalenze', () => {
@@ -113,5 +125,24 @@ describe('Lievia Lab · dominio scenari', () => {
     expect(normalizeLabWorkspace({ version: 9, sessions: [makeSession()] })).toEqual({ version: 1, activeSessionId: null, sessions: [] })
     const invalid = normalizeLabWorkspace({ version: 1, sessions: [{ id: 'bad' }] })
     expect(invalid.sessions).toEqual([])
+  })
+
+  it('preserva tutte le sessioni e gli scenari validi presenti in LocalStorage', () => {
+    const source = makeSession()
+    const scenarios = Array.from({ length: 55 }, (_, index) => ({
+      ...source.scenarios[0],
+      id: `scenario-${index}`,
+      name: `Scenario ${index}`,
+    }))
+    const sessions = Array.from({ length: 21 }, (_, index) => ({
+      ...source,
+      id: `session-${index}`,
+      scenarios,
+      selectedScenarioId: scenarios[0].id,
+    }))
+    const normalized = normalizeLabWorkspace({ version: 1, activeSessionId: sessions[20].id, sessions })
+    expect(normalized.sessions).toHaveLength(21)
+    expect(normalized.sessions.every((session) => session.scenarios.length === 55)).toBe(true)
+    expect(normalized.activeSessionId).toBe(sessions[20].id)
   })
 })

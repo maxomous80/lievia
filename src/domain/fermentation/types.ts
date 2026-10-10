@@ -33,6 +33,8 @@ export interface FermentationPhase {
   minimumDurationMinutes?: number
   maximumDurationMinutes?: number
   boundaryLocked?: boolean
+  optional?: boolean
+  skipped?: boolean
 }
 
 export interface FermentationConfig {
