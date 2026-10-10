@@ -577,6 +577,20 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .assisted-config-grid { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 460px) {
+  .official-flour-grid { grid-template-columns: 1fr; }
+  .official-flour-card { padding: 18px 16px; }
+  .official-flour-card h3 { font-size: 20px; }
+  .official-flour-card .flour-brand { font-size: 14px; line-height: 1.5; }
+  .official-properties { gap: 11px; font-size: 14px; }
+  .official-properties small { font-size: 12px; }
+  .catalogue-result-count, .official-verification, .official-spec-details,
+  .prepared-mix-warning, .official-source-link { font-size: 13px; }
+  .official-spec-details summary, .official-archive > summary { font-size: 14px; }
+  .official-archive-row strong { font-size: 14px; }
+  .official-archive-row span { font-size: 13px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

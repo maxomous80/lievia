@@ -44,6 +44,10 @@ function kindLabel(kind: Flour['productKind']) {
   return 'Farina'
 }
 
+function brandFilterLabel(brand: string) {
+  return brand === 'Mulino Caputo' ? 'Caputo' : brand
+}
+
 function verifiedFieldLabel(field: string) {
   const labels: Record<string, string> = {
     name: 'nome', w: 'W', pl: 'P/L', flourType: 'tipo',
@@ -78,7 +82,7 @@ export function OfficialFlourCatalogue({ flours, archivedFlours }: { flours: Flo
       <div className="section-heading"><div><p className="eyebrow">DATI DA FONTI DEI PRODUTTORI</p><h2>Catalogo commerciale <span className="inline-count">{official.length}</span></h2></div></div>
       <div className="catalogue-filters" aria-label="Filtri catalogo farine">
         <label className="field catalogue-search"><span>Nome commerciale</span><div className="catalogue-search-input"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cerca un prodotto" /></div></label>
-        <label className="field"><span>Marca</span><select value={brand} onChange={(event) => setBrand(event.target.value)}><option value="">Tutte le marche</option>{brands.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label className="field"><span>Marca</span><select value={brand} onChange={(event) => setBrand(event.target.value)}><option value="">Tutte le marche</option>{brands.map((item) => <option key={item} value={item}>{brandFilterLabel(item)}</option>)}</select></label>
         <label className="field"><span>Tipo</span><select value={flourType} onChange={(event) => setFlourType(event.target.value)}><option value="">Tutti i tipi</option>{types.map((item) => <option key={item} value={item}>{item}</option>)}<option value="__missing">Non dichiarato</option></select></label>
         <div className="field"><span>W · intervallo</span><div className="catalogue-range-inputs"><input aria-label="W minimo" type="number" min="0" value={wMin} onChange={(event) => setWMin(event.target.value)} placeholder="Da" /><input aria-label="W massimo" type="number" min="0" value={wMax} onChange={(event) => setWMax(event.target.value)} placeholder="A" /></div></div>
         <div className="field"><span>Proteine % · opzionale</span><div className="catalogue-range-inputs"><input aria-label="Proteine minime" type="number" min="0" step="0.1" value={proteinMin} onChange={(event) => setProteinMin(event.target.value)} placeholder="Da" /><input aria-label="Proteine massime" type="number" min="0" step="0.1" value={proteinMax} onChange={(event) => setProteinMax(event.target.value)} placeholder="A" /></div></div>
