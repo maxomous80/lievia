@@ -1,6 +1,6 @@
-import { ArrowLeft, Check, CircleHelp, PackageCheck, Plus, Save, Scale, Trash2, Wheat } from 'lucide-react'
+import { ArrowLeft, Check, CircleHelp, FlaskConical, PackageCheck, Plus, Save, Scale, Trash2, Wheat } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppData } from '../context/useAppData'
 import { createDefaultDraft, STYLE_DEFAULTS, STYLE_OPTIONS } from '../data/defaults'
 import { calculateDough, type DoughResult } from '../lib/calculator'
@@ -11,6 +11,7 @@ import { getFlourGuidance, getTemperatureGuidance } from '../domain/fermentation
 import { YEAST_ESTIMATOR_MODEL } from '../domain/fermentation/modelConfiguration'
 import { deriveBlendPropertyRanges, isFlourBlendEligible, missingBlendTechnicalData, type NumericRange } from '../domain/flours/blendProperties'
 import { getStockWarnings } from '../domain/flours/pantry'
+import { createRecipeConfiguration, normalizeRecipeConfiguration } from '../domain/lab/scenarios'
 import type { FermentationConfig } from '../domain/fermentation/types'
 import type { RecipeDraft } from '../models'
 
@@ -52,17 +53,20 @@ function IngredientRow({ label, amount, percentage, yeast = false }: { label: st
 export function DoughBuilder() {
   const { flourCatalog, pantryEntries, deductPantryFlours, recipes, saveRecipe, estimatorConfiguration, updateEstimatorConfiguration } = useAppData()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const navigate = useNavigate()
+  const locationState = location.state as { labConfiguration?: unknown } | null
+  const labConfiguration = normalizeRecipeConfiguration(locationState?.labConfiguration)
   const sourceId = searchParams.get('edit') ?? searchParams.get('duplicate')
   const source = recipes.find((recipe) => recipe.id === sourceId)
   const duplicateMode = searchParams.has('duplicate')
-  const [draft, setDraft] = useState<RecipeDraft>(() => source
+  const [draft, setDraft] = useState<RecipeDraft>(() => labConfiguration ? { ...labConfiguration } : source
     ? { ...source, name: duplicateMode ? `${source.name} — copia` : source.name }
     : createDefaultDraft(flourCatalog[0]?.id))
   const [editingId] = useState<string | undefined>(duplicateMode ? undefined : searchParams.get('edit') ?? undefined)
-  const [panShape, setPanShape] = useState<'rect' | 'round'>(source?.panShape ?? 'rect')
-  const [useAreaWeight, setUseAreaWeight] = useState(source?.useAreaWeight ?? false)
-  const [fermentation, setFermentation] = useState<FermentationConfig>(() => source?.fermentation ?? createDefaultFermentationConfig())
+  const [panShape, setPanShape] = useState<'rect' | 'round'>(labConfiguration?.panShape ?? source?.panShape ?? 'rect')
+  const [useAreaWeight, setUseAreaWeight] = useState(labConfiguration?.useAreaWeight ?? source?.useAreaWeight ?? false)
+  const [fermentation, setFermentation] = useState<FermentationConfig>(() => labConfiguration?.fermentation ?? source?.fermentation ?? createDefaultFermentationConfig())
   const [formError, setFormError] = useState('')
   const [saved, setSaved] = useState(false)
   const [pantryOnly, setPantryOnly] = useState(false)
@@ -195,7 +199,7 @@ export function DoughBuilder() {
   return (
     <div className="page-stack builder-page">
       <div className="builder-back"><Link to="/ricette"><ArrowLeft size={15} /> Tutte le ricette</Link><span className="eyebrow">IL TUO PROSSIMO IMPASTO</span></div>
-      <section className="builder-heading"><div><p className="eyebrow">DALLE PERCENTUALI ALLE DOSI</p><h1>{editingId ? 'Modifica impasto' : duplicateMode ? 'Crea una copia' : 'Crea impasto'}</h1><p className="intro-copy">Ogni quantità si aggiorna mentre lavori alla ricetta.</p></div><div className="save-field"><label className="field"><span>Nome della ricetta</span><input value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="Es. La mia pizza del sabato" /></label><button type="button" className="button button-primary" onClick={save}><Save size={16} /> Salva ricetta</button></div></section>
+      <section className="builder-heading"><div><p className="eyebrow">DALLE PERCENTUALI ALLE DOSI</p><h1>{editingId ? 'Modifica impasto' : duplicateMode ? 'Crea una copia' : 'Crea impasto'}</h1><p className="intro-copy">Ogni quantità si aggiorna mentre lavori alla ricetta.</p><button className="button button-outline lab-open-button" type="button" disabled={!result} onClick={() => { const name = draft.name.trim() || 'Impasto non salvato'; const sessionId = `bozza-${crypto.randomUUID()}`; const configuration = createRecipeConfiguration({ ...draft, name, yeastType: fermentation.yeastType, fermentation }, fermentation); navigate(`/lab?session=${encodeURIComponent(sessionId)}`, { state: { labBaseline: { sessionId, name, configuration } } }) }}><FlaskConical size={16} /> Apri in Lievia Lab</button></div><div className="save-field"><label className="field"><span>Nome della ricetta</span><input value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="Es. La mia pizza del sabato" /></label><button type="button" className="button button-primary" onClick={save}><Save size={16} /> Salva ricetta</button></div></section>
       <div className="builder-layout">
         <div className="builder-form">
           <section className="form-section"><div className="form-section-heading"><span className="step-index">01</span><div><h2>La forma dell’impasto</h2><p>Scegli una base, poi personalizzala liberamente.</p></div></div>

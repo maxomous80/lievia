@@ -1,0 +1,117 @@
+import { afterEach, describe, expect, it } from 'vitest'
+import { createDefaultDraft } from '../../data/defaults'
+import { OFFICIAL_FLOURS } from '../../data/officialFlours'
+import { createDefaultFermentationConfig } from '../fermentation/schedule'
+import { normalizeLabWorkspace, createAlternativeScenario, createLabSession, patchScenario, prepareScenarioApplication, renameScenario, resetScenario, selectScenario } from './workspace'
+import { calculateScenario, compareScenarios, createRecipeConfiguration, validateRecipePatch, type RecipeConfiguration } from './scenarios'
+import { readStored, writeStored } from '../../lib/storage'
+
+const now = '2026-10-10T12:00:00.000Z'
+
+function makeConfiguration(): RecipeConfiguration {
+  const fermentation = createDefaultFermentationConfig(new Date(now))
+  return createRecipeConfiguration({ ...createDefaultDraft('demo-00'), name: 'Impasto base', fermentation }, fermentation)
+}
+
+function makeSession() {
+  return createLabSession({
+    id: 'lab-session-1', baselineId: 'recipe:1', baselineName: 'Ricetta originale',
+    baselineConfiguration: makeConfiguration(), sourceRecipeId: 'recipe-1', scenarioId: 'scenario-1', now,
+  })
+}
+
+afterEach(() => window.localStorage.removeItem('lievia.test.lab.v1'))
+
+describe('Lievia Lab · dominio scenari', () => {
+  it('crea scenari senza mutare la configurazione baseline', () => {
+    const baseline = makeConfiguration()
+    const before = structuredClone(baseline)
+    const session = createLabSession({ id: 'session', baselineId: 'recipe:1', baselineName: 'Base', baselineConfiguration: baseline, scenarioId: 's1', now })
+    expect(session.scenarios[0].configuration).toEqual(before)
+    expect(baseline).toEqual(before)
+    expect(session.scenarios[0].configuration).not.toBe(baseline)
+  })
+
+  it('valida patch parziali e rifiuta valori, campi e miscele non validi', () => {
+    const baseline = makeConfiguration()
+    const valid = validateRecipePatch(baseline, { hydrationPct: 70 })
+    expect(valid.ok).toBe(true)
+    if (valid.ok) expect(valid.configuration.hydrationPct).toBe(70)
+    expect(validateRecipePatch(baseline, { hydrationPct: Number.NaN }).issues[0].field).toBe('hydrationPct')
+    expect(validateRecipePatch(baseline, { unknownMutation: true }).issues[0].message).toMatch(/non riconosciuto/)
+    expect(validateRecipePatch(baseline, { flourBlend: [{ flourId: 'demo-00', percentage: 60 }] }).issues[0].message).toMatch(/100%/)
+  })
+
+  it('calcola differenze ingredienti esatte riusando il calcolatore esistente', () => {
+    const baselineConfiguration = makeConfiguration()
+    const patched = validateRecipePatch(baselineConfiguration, { hydrationPct: 75 })
+    expect(patched.ok).toBe(true)
+    if (!patched.ok) return
+    const baseline = calculateScenario('base', 'Baseline', baselineConfiguration, [], [])
+    const alternative = calculateScenario('alt', 'Idratazione 70%', patched.configuration, [], [])
+    const comparison = compareScenarios(baseline, alternative)
+    const water = comparison.ingredients.find(({ ingredient }) => ingredient === 'Acqua')!
+    expect(water.classification).toBe('calcolo esatto')
+    expect(water.difference).toBeGreaterThan(0)
+    expect(alternative.dough?.waterWeight).toBe(alternative.dough!.flourWeight * 0.75)
+  })
+
+  it('confronta blend, campi mancanti e disponibilità senza dichiarare equivalenze', () => {
+    const base = makeConfiguration()
+    const official = OFFICIAL_FLOURS.find(({ officialSource }) => officialSource?.id === 'official-008')!
+    const session = createLabSession({ id: 's', baselineId: 'base', baselineName: 'Base', baselineConfiguration: base, scenarioId: 'alt', now })
+    const changed = patchScenario(session, 'alt', { flourBlend: [{ flourId: official.id, percentage: 100 }] }, OFFICIAL_FLOURS, now)
+    expect(changed.issues).toEqual([])
+    const scenario = changed.session.scenarios[0]
+    const result = calculateScenario(scenario.id, scenario.name, scenario.configuration, OFFICIAL_FLOURS, [])
+    expect(result.missingFlourData[0].fields).toContain('proteine')
+    expect(result.stockWarnings[0].reason).toBe('not-in-pantry')
+    expect(compareScenarios(calculateScenario('base', 'Base', base, OFFICIAL_FLOURS, []), result).blendChanged).toBe(true)
+  })
+
+  it('somma le righe duplicate della stessa farina nella comparazione', () => {
+    const base = makeConfiguration()
+    const flourId = base.flourBlend[0].flourId
+    const baselineConfiguration = createRecipeConfiguration({ ...base, flourBlend: [{ flourId, percentage: 100 }] }, base.fermentation)
+    const alternativeConfiguration = createRecipeConfiguration({ ...base, flourBlend: [{ flourId, percentage: 40 }, { flourId, percentage: 60 }] }, base.fermentation)
+    const baseline = calculateScenario('base', 'Base', baselineConfiguration, [], [])
+    const alternative = calculateScenario('alt', 'Duplicata', alternativeConfiguration, [], [])
+    const flour = compareScenarios(baseline, alternative).ingredients.find(({ ingredient }) => ingredient === `Farina · ${flourId}`)!
+    expect(alternative.dough?.flourQuantities).toHaveLength(2)
+    expect(flour.alternative).toBe(baseline.dough?.flourWeight)
+    expect(flour.difference).toBe(0)
+  })
+
+  it('rispetta le fasi bloccate quando si sposta la finestra e rende espliciti i conflitti', () => {
+    const base = makeConfiguration()
+    const lockedPhases = base.fermentation.phases.map((phase) => phase.type === 'dividing' ? { ...phase, boundaryLocked: true } : phase)
+    const lock = validateRecipePatch(base, { fermentation: { phases: lockedPhases } })
+    expect(lock.ok).toBe(true)
+    if (!lock.ok) return
+    const moved = validateRecipePatch(lock.configuration, { fermentation: { bakingAt: '2026-10-12T20:30:00.000Z' } })
+    expect(moved.ok).toBe(false)
+    if (!moved.ok) expect(moved.issues[0].message).toMatch(/bloccata/)
+  })
+
+  it('gestisce creazione, duplicazione, rinomina, selezione, reset e applicazione esplicita', () => {
+    const session = makeSession()
+    const changed = patchScenario(session, 'scenario-1', { hydrationPct: 72 }, [], now).session
+    const duplicate = createAlternativeScenario(changed, 'scenario-2', now, 'scenario-1')
+    const renamed = renameScenario(duplicate, 'scenario-2', 'Idratazione alta', now)
+    const selected = selectScenario(renamed, 'scenario-2', now)
+    expect(selected.scenarios[1].name).toBe('Idratazione alta')
+    expect(selected.scenarios[1].configuration.hydrationPct).toBe(72)
+    expect(prepareScenarioApplication(selected, 'scenario-2', false)).toBeNull()
+    expect(prepareScenarioApplication(selected, 'scenario-2', true)?.hydrationPct).toBe(72)
+    expect(resetScenario(selected, 'scenario-1', now).scenarios[0].configuration.hydrationPct).toBe(session.baselineConfiguration.hydrationPct)
+  })
+
+  it('serializza e ripristina sessioni versionate, scartando dati corrotti', () => {
+    const workspace = { version: 1 as const, activeSessionId: 'lab-session-1', sessions: [makeSession()] }
+    writeStored('lievia.test.lab.v1', workspace)
+    expect(normalizeLabWorkspace(readStored<unknown>('lievia.test.lab.v1', null))).toEqual(workspace)
+    expect(normalizeLabWorkspace({ version: 9, sessions: [makeSession()] })).toEqual({ version: 1, activeSessionId: null, sessions: [] })
+    const invalid = normalizeLabWorkspace({ version: 1, sessions: [{ id: 'bad' }] })
+    expect(invalid.sessions).toEqual([])
+  })
+})

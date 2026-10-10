@@ -3,12 +3,14 @@ import type { DoughOutcome } from '../domain/feedback/outcomes'
 import type { CalibrationRecord } from '../domain/fermentation/calibration'
 import type { EstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
 import type { PantryEntry } from '../domain/flours/pantry'
+import type { LabWorkspace } from '../domain/lab/workspace'
 import type { Flour, Recipe, RecipeDraft } from '../models'
 
 export interface AppContextValue {
   flourCatalog: Flour[]
   customFlours: Flour[]
   pantryEntries: PantryEntry[]
+  labWorkspace: LabWorkspace
   recipes: Recipe[]
   outcomes: DoughOutcome[]
   calibrationRecords: CalibrationRecord[]
@@ -23,6 +25,7 @@ export interface AppContextValue {
   deleteRecipe: (id: string) => void
   addOutcome: (outcome: DoughOutcome) => void
   updateEstimatorConfiguration: (configuration: EstimatorConfiguration) => void
+  saveLabWorkspace: (workspace: LabWorkspace) => void
   importBackup: (serialized: string) => { recipes: number; customFlours: number; outcomes: number; calibrationRecords: number; pantryEntries: number }
 }
 

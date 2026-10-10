@@ -6,6 +6,7 @@ import { normalizeCalibrationRecords } from '../domain/fermentation/calibration'
 import { normalizeEstimatorConfiguration, createDefaultEstimatorConfiguration, type EstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
 import { normalizeOutcomes, type DoughOutcome } from '../domain/feedback/outcomes'
 import { addToPantry, deductPantryStock, normalizePantryEntries, removeFromPantry, updatePantryEntry, type PantryEntry } from '../domain/flours/pantry'
+import { normalizeLabWorkspace, type LabWorkspace } from '../domain/lab/workspace'
 import { mergeBackup } from '../lib/dataBackup'
 import { readStored, writeStored } from '../lib/storage'
 import type { Flour, Recipe, RecipeDraft } from '../models'
@@ -13,6 +14,7 @@ import { AppContext } from './contextStore'
 
 const FLOURS_KEY = 'lievia.farine.v1'
 const PANTRY_KEY = 'lievia.dispensa.v1'
+const LAB_KEY = 'lievia.lab.scenarios.v1'
 const RECIPES_KEY = 'lievia.ricette.v1'
 const OUTCOMES_KEY = 'lievia.esiti.v1'
 const ESTIMATOR_KEY = 'lievia.stima.v1'
@@ -21,6 +23,7 @@ const CALIBRATION_KEY = 'lievia.calibrazione.v1'
 export function AppProvider({ children }: { children: ReactNode }) {
   const [customFlours, setCustomFlours] = useState(() => normalizeCustomFlours(readStored<unknown>(FLOURS_KEY, [])))
   const [pantryEntries, setPantryEntries] = useState(() => normalizePantryEntries(readStored<unknown>(PANTRY_KEY, [])))
+  const [labWorkspace, setLabWorkspace] = useState(() => normalizeLabWorkspace(readStored<unknown>(LAB_KEY, null)))
   const [recipes, setRecipes] = useState(() => normalizeRecipes(readStored<unknown>(RECIPES_KEY, [createSampleRecipe()])))
   const [outcomes, setOutcomes] = useState(() => normalizeOutcomes(readStored<unknown>(OUTCOMES_KEY, [])))
   const [calibrationRecords, setCalibrationRecords] = useState(() => normalizeCalibrationRecords(readStored<unknown>(CALIBRATION_KEY, [])))
@@ -31,6 +34,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => writeStored(FLOURS_KEY, customFlours), [customFlours])
   useEffect(() => writeStored(PANTRY_KEY, pantryEntries), [pantryEntries])
+  useEffect(() => writeStored(LAB_KEY, labWorkspace), [labWorkspace])
   useEffect(() => writeStored(RECIPES_KEY, recipes), [recipes])
   useEffect(() => writeStored(OUTCOMES_KEY, outcomes), [outcomes])
   useEffect(() => writeStored(CALIBRATION_KEY, calibrationRecords), [calibrationRecords])
@@ -93,6 +97,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setEstimatorConfiguration(normalizeEstimatorConfiguration(configuration))
   }
 
+  function saveLabWorkspace(workspace: LabWorkspace) {
+    setLabWorkspace(normalizeLabWorkspace(workspace))
+  }
+
   function importBackup(serialized: string) {
     const result = mergeBackup(serialized, { recipes, customFlours, outcomes, calibrationRecords, pantryEntries, estimatorConfiguration })
     setRecipes(result.data.recipes)
@@ -106,9 +114,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      flourCatalog, customFlours, pantryEntries, recipes, outcomes, calibrationRecords, estimatorConfiguration,
+      flourCatalog, customFlours, pantryEntries, labWorkspace, recipes, outcomes, calibrationRecords, estimatorConfiguration,
       saveFlour, deleteFlour, addPantryFlour, updatePantryFlour, removePantryFlour, deductPantryFlours, saveRecipe, deleteRecipe, addOutcome,
-      updateEstimatorConfiguration, importBackup,
+      updateEstimatorConfiguration, saveLabWorkspace, importBackup,
     }}>
       {children}
     </AppContext.Provider>
