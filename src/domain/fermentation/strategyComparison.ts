@@ -1,4 +1,5 @@
 import { getFlourGuidance, getTemperatureGuidance } from './guidance'
+import { optimizeFermentationSchedule } from './availability'
 import { applyStrategyTemplate, formatDuration } from './schedule'
 import { calculateTemperatureProfile, type ThermalModelParameters, type TemperatureProfile } from './temperatureProfile'
 import type { FermentationConfig, FermentationStrategy, FlourGuidanceInput } from './types'
@@ -27,7 +28,10 @@ export function compareFermentationStrategies(
 ): StrategyComparisonItem[] {
   return strategies.map((strategy) => {
     try {
-      const candidate = applyStrategyTemplate(config, strategy)
+      const template = applyStrategyTemplate(config, strategy)
+      const optimized = optimizeFermentationSchedule(template)
+      if (!optimized.ok || !optimized.config) throw new RangeError(optimized.conflicts.join(' '))
+      const candidate = optimized.config
       const roomTemperatureMinutes = candidate.phases
         .filter((phase) => phase.environment === 'ambient')
         .reduce((total, phase) => total + phase.durationMinutes, 0)

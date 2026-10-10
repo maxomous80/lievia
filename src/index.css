@@ -14,7 +14,13 @@
   --paper-shadow: #ebe6db;
   --surface: #fbf9f3;
   --ink: #2f332d;
-  --muted: #77796f;
+  --muted: #62645b;
+  --text-secondary: #55584f;
+  --text-subtle: #65675e;
+  --font-body: 1rem;
+  --font-secondary: .875rem;
+  --font-label: .9375rem;
+  --font-control: 1rem;
   --line: #ded9cd;
   --terracotta: #b6634b;
   --terracotta-dark: #92503d;
@@ -27,7 +33,7 @@
 
 * { box-sizing: border-box; }
 html { min-width: 320px; min-height: 100%; scroll-behavior: smooth; }
-body { min-width: 320px; min-height: 100vh; margin: 0; }
+body { min-width: 320px; min-height: 100vh; margin: 0; font-size: var(--font-body); line-height: 1.5; }
 button, input, select, textarea { font: inherit; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 button { color: inherit; }

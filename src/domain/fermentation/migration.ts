@@ -2,6 +2,7 @@ import { isValid, parseISO } from 'date-fns'
 import type { Recipe, YeastType } from '../../models'
 import { applyStrategyTemplate, buildSchedule, calculateBakeFromStart, calculateStartFromBake, createDefaultFermentationConfig } from './schedule'
 import type { FermentationConfig, FermentationPhase, FermentationPhaseType, FermentationStrategy, TemperatureEnvironment } from './types'
+import { DEFAULT_USER_AVAILABILITY } from './availability'
 
 const strategies = new Set<FermentationStrategy>(['room-temperature', 'refrigerated', 'combined', 'custom'])
 const phaseTypes = new Set<FermentationPhaseType>(['mixing', 'initial-rest', 'bulk-fermentation', 'folding', 'dividing', 'refrigeration', 'final-proof'])
@@ -36,6 +37,7 @@ export function normalizeFermentation(value: unknown, yeastType: YeastType): Fer
     totalDurationMinutes,
     plannedStartAt,
     bakingAt: value.bakingAt ? validDate(value.bakingAt) ?? calculateBakeFromStart(plannedStartAt, totalDurationMinutes).toISOString() : bakingAt,
+    availability: normalizeAvailability(value.availability),
     ambientTemperatureC,
     measuredDoughTemperatureC: finite(value.measuredDoughTemperatureC),
     refrigeratorTemperatureC,
@@ -59,6 +61,16 @@ export function normalizeFermentation(value: unknown, yeastType: YeastType): Fer
   return config
 }
 
+function normalizeAvailability(value: unknown): FermentationConfig['availability'] {
+  if (!isRecord(value)) return { ...DEFAULT_USER_AVAILABILITY }
+  const time = (candidate: unknown, fallback: string) => typeof candidate === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(candidate) ? candidate : fallback
+  return {
+    avoidRestHours: typeof value.avoidRestHours === 'boolean' ? value.avoidRestHours : DEFAULT_USER_AVAILABILITY.avoidRestHours,
+    unavailableStart: time(value.unavailableStart, DEFAULT_USER_AVAILABILITY.unavailableStart),
+    unavailableEnd: time(value.unavailableEnd, DEFAULT_USER_AVAILABILITY.unavailableEnd),
+  }
+}
+
 function normalizePhases(value: unknown, ambient: number, refrigerator: number): FermentationPhase[] {
   if (!Array.isArray(value)) return []
   const phases: FermentationPhase[] = []
@@ -79,6 +91,9 @@ function normalizePhases(value: unknown, ambient: number, refrigerator: number):
       temperatureC: finite(entry.temperatureC) ?? (environment === 'refrigerator' ? refrigerator : ambient),
       measuredDoughTemperatureC: finite(entry.measuredDoughTemperatureC),
       notes: typeof entry.notes === 'string' ? entry.notes : typeof entry.note === 'string' ? entry.note : '',
+      minimumDurationMinutes: finite(entry.minimumDurationMinutes),
+      maximumDurationMinutes: finite(entry.maximumDurationMinutes),
+      boundaryLocked: entry.boundaryLocked === true,
     })
   }
   return phases

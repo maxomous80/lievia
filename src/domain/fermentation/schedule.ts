@@ -12,6 +12,7 @@ import {
 } from 'date-fns'
 import { it } from 'date-fns/locale'
 import type { FermentationConfig, FermentationPhase, FermentationPhaseType, FermentationStrategy, TemperatureEnvironment } from './types'
+import { DEFAULT_USER_AVAILABILITY } from './availability'
 
 export const PHASE_LABELS: Record<FermentationPhaseType, string> = {
   mixing: 'Impasto e lavorazione',
@@ -19,7 +20,7 @@ export const PHASE_LABELS: Record<FermentationPhaseType, string> = {
   'bulk-fermentation': 'Puntata',
   folding: 'Pieghe',
   dividing: 'Staglio e formatura',
-  refrigeration: 'Maturazione in frigorifero',
+  refrigeration: 'Fermentazione in frigorifero',
   'final-proof': 'Appretto',
   baking: 'Cottura',
 }
@@ -84,12 +85,14 @@ export function setScheduleAnchor(
   const selected = parseLocalDateTime(dateTime)
   const plannedStart = anchor === 'start' ? selected : calculateStartFromBake(selected, config.totalDurationMinutes)
   const baking = anchor === 'bake' ? selected : calculateBakeFromStart(selected, config.totalDurationMinutes)
+  const phases = buildSchedule(config.phases, plannedStart, config.totalDurationMinutes)
+  preserveLockedBoundaries(config.phases, phases)
   return {
     ...config,
     timeAnchor: anchor,
     plannedStartAt: plannedStart.toISOString(),
     bakingAt: baking.toISOString(),
-    phases: buildSchedule(config.phases, plannedStart, config.totalDurationMinutes),
+    phases,
   }
 }
 
@@ -102,12 +105,14 @@ export function updateTotalDuration(config: FermentationConfig, totalDurationMin
     ? calculateStartFromBake(baking, totalDurationMinutes)
     : parseLocalDateTime(config.plannedStartAt)
   const phases = resizePhases(config.phases, totalDurationMinutes)
+  const scheduled = buildSchedule(phases, start, totalDurationMinutes)
+  preserveLockedBoundaries(config.phases, scheduled)
   return {
     ...config,
     totalDurationMinutes,
     plannedStartAt: start.toISOString(),
     bakingAt: baking.toISOString(),
-    phases: buildSchedule(phases, start, totalDurationMinutes),
+    phases: scheduled,
   }
 }
 
@@ -123,12 +128,14 @@ export function updatePhase(config: FermentationConfig, phaseId: string, changes
   const bakeAnchor = config.timeAnchor === 'bake' ? parseLocalDateTime(config.bakingAt) : undefined
   const startAt = bakeAnchor ? calculateStartFromBake(bakeAnchor, totalDurationMinutes) : parseLocalDateTime(config.plannedStartAt)
   const bakingAt = bakeAnchor ?? calculateBakeFromStart(startAt, totalDurationMinutes)
+  const scheduled = buildSchedule(phases, startAt, totalDurationMinutes)
+  preserveLockedBoundaries(config.phases, scheduled)
   return {
     ...config,
     totalDurationMinutes,
     plannedStartAt: startAt.toISOString(),
     bakingAt: bakingAt.toISOString(),
-    phases: buildSchedule(phases, startAt, totalDurationMinutes),
+    phases: scheduled,
     planConfirmed: true,
   }
 }
@@ -144,12 +151,14 @@ export function removePhase(config: FermentationConfig, phaseId: string): Fermen
   const totalDurationMinutes = phaseDurationTotal(phases)
   const bakeAnchor = config.timeAnchor === 'bake' ? parseLocalDateTime(config.bakingAt) : undefined
   const start = bakeAnchor ? calculateStartFromBake(bakeAnchor, totalDurationMinutes) : parseLocalDateTime(config.plannedStartAt)
+  const scheduled = buildSchedule(phases, start, totalDurationMinutes)
+  preserveLockedBoundaries(config.phases, scheduled)
   return {
     ...config,
     totalDurationMinutes,
     plannedStartAt: start.toISOString(),
     bakingAt: (bakeAnchor ?? calculateBakeFromStart(start, totalDurationMinutes)).toISOString(),
-    phases: buildSchedule(phases, start, totalDurationMinutes),
+    phases: scheduled,
     planConfirmed: true,
   }
 }
@@ -160,13 +169,14 @@ export function applyStrategyTemplate(
   durationMinutes = config.totalDurationMinutes,
 ): FermentationConfig {
   const phases = createStrategyPhases(strategy, durationMinutes, config.ambientTemperatureC, config.refrigeratorTemperatureC)
-  const start = parseLocalDateTime(config.plannedStartAt)
+  const bakeAnchor = config.timeAnchor === 'bake' ? parseLocalDateTime(config.bakingAt) : undefined
+  const start = bakeAnchor ? calculateStartFromBake(bakeAnchor, durationMinutes) : parseLocalDateTime(config.plannedStartAt)
+  const bakingAt = bakeAnchor ?? calculateBakeFromStart(start, durationMinutes)
   return {
     ...config,
     strategy,
     totalDurationMinutes: durationMinutes,
-    timeAnchor: 'start',
-    bakingAt: calculateBakeFromStart(start, durationMinutes).toISOString(),
+    bakingAt: bakingAt.toISOString(),
     phases: buildSchedule(phases, start, durationMinutes),
     planConfirmed: true,
   }
@@ -240,6 +250,7 @@ export function createDefaultFermentationConfig(now = new Date()): FermentationC
     totalDurationMinutes: duration,
     plannedStartAt: start.toISOString(),
     bakingAt: bake.toISOString(),
+    availability: { ...DEFAULT_USER_AVAILABILITY },
     ambientTemperatureC: 23,
     refrigeratorTemperatureC: 5,
     phases: [],
@@ -278,28 +289,47 @@ export function environmentLabel(environment: TemperatureEnvironment): string {
   return environment === 'ambient' ? 'Ambiente' : environment === 'refrigerator' ? 'Frigorifero' : environment === 'dough' ? 'Impasto' : 'Personalizzata'
 }
 
+function preserveLockedBoundaries(previous: FermentationPhase[], next: FermentationPhase[]) {
+  const nextById = new Map(next.map((phase) => [phase.id, phase]))
+  for (const phase of previous.filter((candidate) => candidate.boundaryLocked)) {
+    const updated = nextById.get(phase.id)
+    if (updated && (updated.startAt !== phase.startAt || updated.endAt !== phase.endAt)) {
+      throw new RangeError(`L’operazione bloccata “${PHASE_LABELS[phase.type]}” non può essere spostata senza sbloccarla.`)
+    }
+  }
+}
+
 function resizePhases(phases: FermentationPhase[], newTotal: number): FermentationPhase[] {
   if (!phases.length) return []
-  const oldTotal = phaseDurationTotal(phases)
   const handsOnTypes = new Set<FermentationPhaseType>(['mixing', 'folding', 'dividing'])
-  const fixedTotal = phases.reduce((total, phase) => total + (handsOnTypes.has(phase.type) ? phase.durationMinutes : 0), 0)
-  const newVariableTotal = newTotal - fixedTotal
-  if (newVariableTotal < 0) throw new RangeError('La durata totale è inferiore al tempo previsto per le operazioni manuali')
-  const oldVariableTotal = oldTotal - fixedTotal
-  const variableCount = phases.filter((phase) => !handsOnTypes.has(phase.type)).length
-  if (variableCount === 0 && newVariableTotal > 0) {
+  const manual = phases.filter((phase) => handsOnTypes.has(phase.type))
+  const flexible = phases.filter((phase) => !handsOnTypes.has(phase.type))
+  const fixedTotal = manual.reduce((total, phase) => total + phase.durationMinutes, 0)
+  const variableTotal = newTotal - fixedTotal
+  if (variableTotal < 0) throw new RangeError('La durata totale è inferiore al tempo previsto per le operazioni manuali')
+  if (flexible.length === 0 && variableTotal > 0) {
     throw new RangeError('Aggiungi una fase di riposo o fermentazione per distribuire la durata restante')
   }
-  let allocated = 0
-  return phases.map((phase, index) => {
-    if (handsOnTypes.has(phase.type)) return { ...phase }
-    const isLastVariable = !phases.slice(index + 1).some((next) => !handsOnTypes.has(next.type))
-    const durationMinutes = isLastVariable
-      ? newVariableTotal - allocated
-      : oldVariableTotal > 0
-        ? Math.round(newVariableTotal * phase.durationMinutes / oldVariableTotal)
-        : Math.floor(newVariableTotal / variableCount)
-    allocated += durationMinutes
-    return { ...phase, durationMinutes }
-  })
+  if (manual.some((phase) => phase.minimumDurationMinutes !== undefined && phase.durationMinutes < phase.minimumDurationMinutes ||
+    phase.maximumDurationMinutes !== undefined && phase.durationMinutes > phase.maximumDurationMinutes)) {
+    throw new RangeError('Una durata fissa di un’operazione manuale viola i limiti configurati')
+  }
+  let durations = flexible.map((phase) => Math.max(phase.minimumDurationMinutes ?? 0, Math.min(phase.durationMinutes, phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY)))
+  let delta = variableTotal - durations.reduce((sum, duration) => sum + duration, 0)
+  for (const [index, phase] of flexible.entries()) {
+    if (delta === 0) break
+    const minimum = phase.minimumDurationMinutes ?? 0
+    const maximum = phase.maximumDurationMinutes ?? Number.POSITIVE_INFINITY
+    if (!Number.isFinite(minimum) || minimum < 0 || Number.isNaN(maximum) || maximum < minimum) {
+      throw new RangeError(`I limiti configurati per “${PHASE_LABELS[phase.type]}” non sono validi`)
+    }
+    const change = delta > 0 ? Math.min(delta, maximum - durations[index]) : -Math.min(-delta, durations[index] - minimum)
+    durations[index] += change
+    delta -= change
+  }
+  if (delta !== 0) throw new RangeError('I limiti minimi o massimi delle fasi non consentono la durata totale richiesta')
+  let flexibleIndex = 0
+  return phases.map((phase) => handsOnTypes.has(phase.type)
+    ? { ...phase }
+    : { ...phase, durationMinutes: durations[flexibleIndex++] })
 }

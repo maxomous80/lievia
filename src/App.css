@@ -201,6 +201,7 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .field-row > .field { flex: 1; }
 .segmented-control { display: flex; min-height: 39px; align-items: stretch; padding: 3px; border: 1px solid #dcd7ca; border-radius: 3px; background: #efede5; }
 .segmented-control button { flex: 1; padding: 0 9px; border: 0; border-radius: 2px; color: #76766c; background: transparent; cursor: pointer; font-size: 10px; white-space: nowrap; }
+.time-anchor-switch .segmented-control button { min-height: 44px; font-size: 14px; white-space: normal; }
 .segmented-control button.selected { color: var(--ink); background: #fffdf8; box-shadow: 0 1px 3px rgba(38,35,26,.11); }
 .input-with-unit { display: flex; min-height: 39px; align-items: center; border: 1px solid #dcd7ca; border-radius: 3px; background: #fffdf8; }
 .input-with-unit input { width: 100%; min-width: 0; height: 37px; padding: 0 10px; border: 0; outline: none; color: var(--ink); background: transparent; font-size: 12px; }
@@ -256,9 +257,12 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .ingredient-group { padding: 13px 0 8px; border-bottom: 1px solid var(--line); }
 .ingredient-group-title { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; color: #8a796b; font-size: 8px; font-weight: 700; letter-spacing: .8px; }
 .ingredient-row { display: grid; min-height: 27px; grid-template-columns: minmax(0, 1fr) auto 44px; align-items: center; gap: 7px; color: #55574f; font-size: 10px; }
+.ingredient-name { min-width: 0; overflow-wrap: anywhere; }
 .ingredient-row strong { color: var(--ink); font-size: 11px; font-weight: 650; white-space: nowrap; }
 .ingredient-row strong small { color: #77776e; font-size: 8px; font-weight: 400; }
 .ingredient-row em { color: #848378; font-size: 9px; font-style: normal; text-align: right; }
+.ingredient-amount { font-variant-numeric: tabular-nums; }
+.yeast-ingredient-row { padding: 3px 0; border-radius: 3px; background: #f3eee2; }
 .ingredient-subtotal { margin-top: 4px; padding-top: 5px; border-top: 1px dashed #d9d3c6; font-weight: 650; }
 .ingredient-subtotal > span { color: var(--ink); }
 .mass-note { display: flex; align-items: flex-start; gap: 6px; padding: 11px 0 3px; color: #63735f; font-size: 8px; line-height: 1.45; }
@@ -289,29 +293,30 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .temperature-help { display: flex; align-items: center; gap: 6px; margin: 11px 0 0; color: #87867b; font-size: 9px; }
 .strategy-controls { display: flex; align-items: end; gap: 10px; }
 .strategy-controls > .field { flex: 1; }
-.template-button { min-height: 39px; flex: 0 0 auto; }
+.template-button { min-height: 44px; flex: 0 0 auto; font-size: 14px; }
 .strategy-explanation { margin: 9px 0 0; color: #838277; font-size: 9px; line-height: 1.55; }
 .phase-heading { justify-content: space-between; }
 .phase-heading > div { display: flex; align-items: center; gap: 8px; }
+.phase-heading > .icon-button { width: 44px; height: 44px; }
 .phase-count { display: grid; min-width: 18px; height: 18px; place-items: center; border-radius: 50%; color: #70776a; background: var(--sage-soft); font-size: 9px; }
 .phase-edit-list { display: grid; gap: 9px; }
 .phase-edit-card { padding: 11px 12px 10px; border: 1px solid #e1dcd0; border-radius: 4px; background: rgba(251,249,243,.75); }
 .phase-edit-top { display: flex; align-items: end; gap: 8px; }
 .phase-order { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; margin-bottom: 7px; border-radius: 50%; color: #857868; background: #efe8dc; font-family: var(--serif); font-size: 10px; }
 .phase-type-field { flex: 1; }
-.phase-edit-top > .icon-button { width: 30px; height: 30px; margin-bottom: 3px; }
+.phase-edit-top > .icon-button { width: 44px; height: 44px; margin-bottom: 0; }
 .phase-edit-fields { display: grid; grid-template-columns: 1.05fr 1fr .7fr; align-items: end; gap: 9px; margin-top: 10px; }
 .phase-duration-control { display: grid; gap: 7px; }
 .phase-duration-control > span { color: #54564f; font-size: 10px; font-weight: 650; }
 .phase-duration-inputs { display: flex; gap: 5px; }
-.phase-duration-inputs label { display: flex; min-width: 0; min-height: 39px; align-items: center; border: 1px solid #dcd7ca; border-radius: 3px; background: #fffdf8; }
-.phase-duration-inputs input { width: 100%; min-width: 24px; height: 36px; padding: 0 5px; border: 0; outline: 0; background: transparent; font-size: 11px; }
+.phase-duration-inputs label { display: flex; min-width: 0; min-height: 44px; align-items: center; border: 1px solid #dcd7ca; border-radius: 3px; background: #fffdf8; }
+.phase-duration-inputs input { width: 100%; min-width: 24px; height: 42px; padding: 0 5px; border: 0; outline: 0; background: transparent; font-size: 14px; }
 .phase-duration-inputs small { padding-right: 5px; color: #88877c; font-size: 8px; }
 .phase-notes-field { margin: 10px 0 0 32px; }
 .phase-measured-temp { max-width: 220px; margin: 9px 0 0 32px; }
 .phase-notes-field textarea { min-height: 49px; }
 .phase-time-caption { margin: 8px 0 0 32px; color: #858478; font-size: 8px; }
-.add-phase-button { margin: 11px 0 0 31px; }
+.add-phase-button { min-height: 44px; margin: 11px 0 0 31px; font-size: 14px; white-space: normal; }
 .phase-total { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; margin-top: 13px; padding: 10px 11px; border-radius: 3px; background: #f0eee6; }
 .phase-total > span:first-child { color: #595b53; font-size: 10px; }
 .phase-total > strong { color: var(--sage-dark); font-family: var(--serif); font-size: 14px; font-weight: 500; }
@@ -320,7 +325,7 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .yeast-subsection { padding-bottom: 12px; }
 .yeast-dot { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; color: var(--terracotta-dark); background: var(--terracotta-soft); font-family: var(--serif); font-size: 10px; }
 .yeast-mode-toggle { display: flex; width: max-content; gap: 3px; margin-bottom: 12px; padding: 3px; border: 1px solid #dcd7ca; border-radius: 3px; background: #efede5; }
-.yeast-mode-toggle button { min-height: 28px; padding: 0 12px; border: 0; border-radius: 2px; color: #76766c; background: transparent; cursor: pointer; font-size: 10px; }
+.yeast-mode-toggle button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 2px; color: #76766c; background: transparent; cursor: pointer; font-size: 14px; }
 .yeast-mode-toggle button.selected { color: var(--ink); background: #fffdf8; box-shadow: 0 1px 3px rgba(38,35,26,.11); }
 .yeast-type-field { max-width: 280px; margin-bottom: 12px; }
 .manual-dose-row { display: grid; max-width: 460px; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -335,7 +340,7 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .fermentation-warnings > p { margin: 6px 0 0; color: #6b6456; font-size: 9px; line-height: 1.55; }
 .fermentation-warnings > p strong { color: #66563d; }
 .fermentation-actions { display: flex; justify-content: flex-end; margin-left: 37px; }
-.fermentation-actions .button { min-height: 36px; font-size: 10px; }
+.fermentation-actions .button { min-height: 44px; font-size: 14px; }
 .feedback-form-section { padding: 22px 0; border-top: 1px solid var(--line); }
 .feedback-form-section > .section-heading, .outcome-history > .section-heading { margin-bottom: 18px; }
 .feedback-form-section > .section-heading > svg { color: var(--sage-dark); }
@@ -371,10 +376,10 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .assisted-subheading > strong { color: #4f574c; font-size: 10px; }
 .assisted-subheading > span { color: var(--muted); font-size: 9px; line-height: 1.5; }
 .yeast-conversion-row { display: flex; min-height: 31px; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid rgba(222,217,205,.7); color: #77766c; font-size: 9px; }
-.yeast-conversion-row .text-link, .comparison-toggle { padding: 3px 0; border: 0; color: var(--sage-dark); background: transparent; cursor: pointer; font-size: 9px; font-weight: 650; }
+.yeast-conversion-row .text-link, .comparison-toggle { min-height: 44px; padding: 3px 0; border: 0; color: var(--sage-dark); background: transparent; cursor: pointer; font-size: 14px; font-weight: 650; }
 .comparison-toggle { margin-top: 9px; }
 .assisted-disclosure { margin-top: 10px; border-top: 1px solid #e4d8cd; }
-.assisted-disclosure summary { padding: 10px 0 4px; color: var(--sage-dark); cursor: pointer; font-size: 10px; font-weight: 650; }
+.assisted-disclosure summary { min-height: 44px; padding: 10px 0 4px; color: var(--sage-dark); cursor: pointer; font-size: 14px; font-weight: 650; }
 .assisted-config-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding-top: 8px; }
 .assisted-config-grid .field small { display: inline; }
 .assisted-disclosure > p { margin: 10px 0 0; color: var(--muted); font-size: 9px; line-height: 1.6; }
@@ -394,27 +399,51 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .result-fermentation-meta { display: grid; gap: 5px; margin: 10px 0 12px; color: #77766c; font-size: 8px; line-height: 1.4; }
 .result-fermentation-meta > span { color: var(--sage-dark); font-size: 9px; font-weight: 650; }
 .result-fermentation-meta > strong { color: var(--ink); font-family: var(--serif); font-size: 13px; font-weight: 500; }
+.result-fermentation-meta .summary-bake-target, .result-fermentation-meta .summary-yeast-dose { color: var(--ink); font-weight: 700; }
+.result-fermentation-meta .summary-yeast-dose { padding: 5px 7px; border-left: 3px solid var(--terracotta); background: #f4e9e2; }
+.availability-hours { display: grid; max-width: 420px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.availability-hours > p { grid-column: 1 / -1; margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+.availability-toggle { min-height: 44px; font-size: 15px; }
+.availability-toggle input, .phase-lock input { width: 20px; height: 20px; flex: 0 0 auto; }
+.optimize-schedule-button { min-height: 44px; font-size: 15px; }
+.optimize-schedule-button:disabled { color: #686a62; background: #e8e5dc; cursor: not-allowed; }
+.scheduling-conflict { margin: 12px 0; padding: 12px 14px; border-left: 3px solid #9b4b39; color: #5f3128; background: #f4e8e1; font-size: 14px; line-height: 1.5; }
+.scheduling-conflict strong { display: block; margin-bottom: 5px; font-size: 15px; }
+.scheduling-conflict p { margin: 4px 0 0; }
+.practical-suggestions { margin: 10px 0; padding: 10px 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+.practical-suggestions strong { color: var(--ink); font-size: 15px; }
+.practical-suggestions p { margin: 4px 0 0; }
+.phase-lock { min-height: 44px; margin: 9px 0 0 32px; font-size: 14px; }
+.phase-duration-limits { margin: 10px 0 0 32px; }
+.phase-duration-limits summary { display: flex; min-height: 44px; align-items: center; color: var(--sage-dark); cursor: pointer; font-size: 14px; font-weight: 650; }
+.phase-duration-limits > div { display: grid; max-width: 420px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .fermentation-timeline { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
-.timeline-phase { position: relative; display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 9px; padding: 0 0 13px; }
-.timeline-phase:not(:last-child)::after { position: absolute; top: 22px; bottom: 0; left: 10px; width: 1px; background: #d9d7ca; content: ''; }
-.timeline-marker { position: relative; z-index: 1; display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid #d4ddce; border-radius: 50%; color: var(--sage-dark); background: #edf0e8; }
+.timeline-phase { position: relative; display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 13px; padding: 0 0 19px; }
+.timeline-phase:not(:last-child)::after { position: absolute; top: 36px; bottom: 0; left: 17px; width: 1px; background: #d9d7ca; content: ''; }
+.timeline-marker { position: relative; z-index: 1; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #d4ddce; border-radius: 50%; color: var(--sage-dark); background: #edf0e8; }
 .timeline-phase.hands-on .timeline-marker { border-color: #e6cfc4; color: var(--terracotta-dark); background: #f4e9e3; }
 .timeline-phase.bake-event .timeline-marker { border-color: #c9a78d; color: #81563e; background: #f2e6d6; }
 .timeline-content { min-width: 0; padding-top: 2px; }
-.timeline-phase-heading { display: flex; align-items: center; gap: 6px; }
-.timeline-phase-heading > strong { color: #494d45; font-size: 9px; font-weight: 650; line-height: 1.4; }
-.timeline-kind { padding: 2px 4px; border-radius: 2px; color: #90604b; background: #f2e6df; font-size: 6px; font-weight: 700; letter-spacing: .4px; }
-.timeline-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 5px; margin-top: 3px; color: #77766b; font-size: 8px; }
-.timeline-temperature { display: flex; align-items: center; gap: 4px; margin-top: 3px; color: #818176; font-size: 8px; }
-.timeline-note { margin: 4px 0 0; color: #848378; font-size: 8px; line-height: 1.45; }
+.timeline-phase-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 9px; }
+.timeline-phase-heading > strong { color: #343830; font-size: 16px; font-weight: 700; line-height: 1.35; }
+.timeline-kind { color: #794532; font-size: 12px; font-weight: 650; }
+.timeline-dates { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 4px; color: var(--text-secondary); font-size: 14px; }
+.timeline-times { display: flex; align-items: baseline; gap: 9px; margin-top: 2px; color: var(--ink); font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.timeline-duration { margin-top: 2px; color: var(--text-secondary); font-size: 14px; }
+.timeline-duration strong { color: var(--ink); font-weight: 700; }
+.timeline-temperature { display: flex; align-items: center; gap: 6px; margin-top: 7px; color: var(--text-secondary); font-size: 14px; }
+.timeline-note { margin: 7px 0 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
 .fermentation-timeline.compact { gap: 0; }
-.fermentation-timeline.compact .timeline-phase { grid-template-columns: 17px minmax(0,1fr); gap: 7px; padding-bottom: 8px; }
-.fermentation-timeline.compact .timeline-phase:not(:last-child)::after { top: 17px; left: 8px; }
-.fermentation-timeline.compact .timeline-marker { width: 17px; height: 17px; }
-.fermentation-timeline.compact .timeline-marker svg { width: 10px; height: 10px; }
-.fermentation-timeline.compact .timeline-phase-heading > strong { font-size: 8px; }
-.fermentation-timeline.compact .timeline-meta { font-size: 7px; }
-.summary-warning { display: flex; align-items: flex-start; gap: 5px; margin: 6px 0 0; color: #896c43; font-size: 8px; line-height: 1.45; }
+.fermentation-timeline.compact .timeline-phase { grid-template-columns: 30px minmax(0,1fr); gap: 10px; padding-bottom: 14px; }
+.fermentation-timeline.compact .timeline-phase:not(:last-child)::after { top: 30px; left: 14px; }
+.fermentation-timeline.compact .timeline-marker { width: 30px; height: 30px; }
+.fermentation-timeline.compact .timeline-marker svg { width: 17px; height: 17px; }
+.fermentation-timeline.compact .timeline-phase-heading > strong { font-size: 14px; }
+.fermentation-timeline.compact .timeline-kind { font-size: 11px; }
+.fermentation-timeline.compact .timeline-dates { font-size: 13px; }
+.fermentation-timeline.compact .timeline-times { font-size: 15px; }
+.fermentation-timeline.compact .timeline-duration { font-size: 13px; }
+.summary-warning { display: flex; align-items: flex-start; gap: 7px; margin: 8px 0 0; color: #68451d; font-size: 14px; line-height: 1.5; }
 .summary-warning svg { flex: 0 0 auto; }
 .print-recipe { display: none; }
 
@@ -443,9 +472,10 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 }
 @media (max-width: 860px) {
   .sidebar { display: none; }
-  .mobile-nav { position: fixed; z-index: 20; right: 0; bottom: 0; left: 0; display: grid; height: 64px; grid-template-columns: repeat(4, 1fr); padding: 5px max(8px, env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); border-top: 1px solid var(--line); background: rgba(251,249,243,.97); backdrop-filter: blur(14px); }
-  .mobile-nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #85857b; font-size: 9px; }
-  .mobile-nav-link.active { color: var(--terracotta-dark); font-weight: 700; }
+  .mobile-nav { position: fixed; z-index: 20; right: 0; bottom: 0; left: 0; display: grid; height: calc(68px + env(safe-area-inset-bottom)); grid-template-columns: repeat(4, 1fr); padding: 5px max(8px, env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); border-top: 1px solid var(--line); background: rgba(251,249,243,.97); backdrop-filter: blur(14px); }
+  .mobile-nav-link { display: flex; min-height: 48px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #55584f; font-size: 14px; }
+  .mobile-nav-link svg { width: 22px; height: 22px; }
+  .mobile-nav-link.active { color: #713d2d; font-weight: 700; }
   .topbar { height: 58px; padding-inline: 24px; }
   .main-content { padding: 29px 24px 94px; }
   .dashboard-grid { grid-template-columns: minmax(0, 1.3fr) minmax(220px, .8fr); gap: 25px; }
@@ -457,11 +487,65 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .recipe-card { grid-template-columns: 42px minmax(0,1fr) auto; }
   .recipe-stats { grid-column: 2 / -1; grid-row: 2; }
   .recipe-actions { grid-column: 2 / -1; grid-row: 3; }
+  .result-panel-heading .eyebrow, .result-live { font-size: 12px; }
+  .result-total > span { color: var(--text-secondary); font-size: 14px; }
+  .result-total > p { color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
+  .ingredient-group-title, .estimate-heading { color: var(--text-secondary); font-size: 12px; letter-spacing: 0; }
+  .ingredient-row { min-height: 42px; font-size: 14px; }
+  .ingredient-row strong { font-size: 17px; }
+  .ingredient-row strong small, .ingredient-row em { color: var(--text-secondary); font-size: 13px; }
+  .mass-note, .rounding-note { color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+  .estimate-values small, .blend-estimates > p { color: var(--text-secondary); font-size: 13px; }
+  .estimate-heading > span:last-child { color: var(--text-secondary); }
+  .phase-count { min-width: 22px; height: 22px; font-size: 12px; }
+  .phase-total > span:first-child, .phase-total > span:last-child { font-size: 14px; line-height: 1.45; }
+  .phase-total > strong { font-size: 16px; }
+  .time-anchor-switch .segmented-control button, .template-button,
+  .phase-edit-top > .icon-button, .yeast-mode-toggle button,
+  .phase-heading > .icon-button, .fermentation-actions .button,
+  .add-phase-button, .comparison-toggle { min-height: 44px; font-size: 14px; }
+  .phase-edit-top > .icon-button { width: 44px; height: 44px; margin-bottom: 0; }
+  .phase-heading > .icon-button { width: 44px; height: 44px; }
+  .fermentation-editor .field input, .fermentation-editor .field select,
+  .fermentation-editor .field textarea { min-height: 44px; font-size: 16px; }
+  .fermentation-editor .check-line, .phase-duration-limits summary,
+  .assisted-disclosure summary { min-height: 44px; }
 }
 @media (max-width: 640px) {
+  body { font-size: 16px; }
   .topbar { height: 53px; padding-inline: 18px; }
   .topbar-user > span:last-child { display: none; }
-  .main-content { padding: 25px 17px 88px; }
+  .main-content { padding: 25px 17px calc(108px + env(safe-area-inset-bottom)); }
+  .main-content :where(input, select, textarea, button, summary, a) { scroll-margin-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .button { min-height: 44px; font-size: 16px; }
+  .button-outline { min-height: 44px; }
+  .text-link { min-height: 44px; align-items: center; font-size: 14px; white-space: normal; }
+  .icon-button { width: 44px; height: 44px; }
+  .round-link { width: 44px; height: 44px; }
+  .field > span, .field-label { font-size: 15px; line-height: 1.35; }
+  .field > span small { font-size: 13px; }
+  .field input, .field select, .field textarea { min-height: 44px; font-size: 16px; }
+  .input-with-unit { min-height: 44px; }
+  .input-with-unit input { height: 42px; font-size: 16px; }
+  .input-with-unit small { font-size: 14px; }
+  .check-line { min-height: 44px; font-size: 15px; }
+  .check-line input { width: 20px; height: 20px; }
+  details > summary { min-height: 44px; }
+  .page-intro-row .button { min-height: 44px; font-size: 14px; }
+  .page-intro-row .intro-copy, .intro-copy, .welcome-copy, .hero-copy > p,
+  .demo-note p, .flour-brand, .flour-notes, .catalogue-result-count,
+  .official-verification, .official-spec-details, .prepared-mix-warning,
+  .official-source-link, .custom-flour-info span, .recipe-card-note,
+  .recipe-book-meta, .form-section-heading p, .temperature-help,
+  .strategy-explanation, .plan-status, .phase-time-caption, .yeast-integrity,
+  .assisted-panel > p, .assisted-strategy-line, .assisted-subheading > span,
+  .assisted-disclosure > p, .temperature-profile-summary,
+  .fermentation-warnings > p, .feedback-notice, .outcome-main > p,
+  .outcome-condition small, .calibration-status p, .calibration-status small {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+  }
   .page-stack { gap: 26px; }
   h1, .welcome-line h1 { font-size: 33px; }
   .welcome-line { align-items: start; }
@@ -477,13 +561,13 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .hero-index { left: 18px; right: auto; }
   .dashboard-grid { grid-template-columns: 1fr; gap: 27px; }
   .section-heading h2 { font-size: 21px; }
-  .page-foot { gap: 10px; font-size: 7px; }
+  .page-foot { gap: 10px; font-size: 10px; }
   .page-foot span:last-child { text-align: right; }
   .page-intro-row { align-items: start; }
-  .page-intro-row .button { min-height: 37px; gap: 6px; padding-inline: 10px; font-size: 10px; }
+  .page-intro-row .button { min-height: 44px; gap: 6px; padding-inline: 10px; font-size: 16px; }
   .page-intro-row .intro-copy { max-width: 330px; }
   .demo-note { padding: 11px; }
-  .demo-note p { font-size: 12px; }
+  .demo-note p { font-size: 14px; }
   .flour-catalog-grid { gap: 8px; }
   .flour-card { padding: 13px 11px 11px; }
   .flour-card-top { margin-bottom: 11px; }
@@ -511,8 +595,8 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .flour-form-section { padding: 16px 13px; }
   .flour-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 9px; }
   .field input, .field select, .field textarea { font-size: 16px; }
-  .field > span, .field-label { font-size: 11px; }
-  .field > span small { font-size: 10px; }
+  .field > span, .field-label { font-size: 15px; }
+  .field > span small { font-size: 13px; }
   .form-bottom { align-items: end; flex-wrap: wrap; }
   .form-bottom .button { margin-left: auto; }
   .recipe-card { grid-template-columns: 38px minmax(0,1fr); gap: 10px; padding: 13px; }
@@ -532,22 +616,29 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .result-panel { position: static; order: -1; width: 100%; padding: 16px 15px 13px; }
   .result-total > strong { font-size: 33px; }
   .result-total > span { font-size: 12px; }
-  .ingredient-row { font-size: 11px; }
-  .ingredient-row strong small { font-size: 10px; }
-  .mass-note, .rounding-note { font-size: 10px; }
+  .ingredient-row { min-height: 38px; grid-template-columns: minmax(0, 1fr) auto 48px; gap: 8px; font-size: 14px; }
+  .ingredient-row strong { font-size: 19px; }
+  .ingredient-row strong small { font-size: 13px; }
+  .ingredient-row em { font-size: 12px; }
+  .mass-note, .rounding-note { font-size: 13px; line-height: 1.5; }
+  .result-fermentation-heading h3 { font-size: 22px; }
+  .result-fermentation-meta { gap: 8px; font-size: 14px; }
+  .result-fermentation-meta > span { font-size: 14px; }
+  .result-fermentation-meta > strong { font-size: 22px; }
+  .result-fermentation-meta small { font-size: 14px; line-height: 1.45; }
   .builder-form { width: 100%; }
   .form-section { padding-block: 19px; }
   .field-row { gap: 9px; }
   .form-section-heading { margin-bottom: 15px; }
-  .form-section-heading h2 { font-size: 18px; }
-  .form-section-heading p { font-size: 11px; }
-  .segmented-control button { padding-inline: 5px; font-size: 11px; }
+  .form-section-heading h2 { font-size: 22px; }
+  .form-section-heading p { font-size: 14px; }
+  .segmented-control button { min-height: 44px; padding-inline: 5px; font-size: 14px; white-space: normal; }
   .pan-panel { padding: 11px; gap: 11px 8px; }
-  .shape-toggle button { font-size: 10px; }
+  .shape-toggle button { min-height: 40px; font-size: 12px; }
   .density-field .field-label { line-height: 1.4; }
   .blend-percentage { width: 83px; }
   .blend-row { gap: 5px; }
-  .blend-remove { width: 29px; }
+  .blend-remove { width: 44px; }
   .percentage-grid { gap: 8px; }
   .optional-grid { max-width: 100%; }
   .estimate-values { gap: 27px; }
@@ -557,11 +648,65 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .phase-duration-inputs { max-width: 180px; }
   .phase-notes-field, .phase-measured-temp, .phase-time-caption { margin-left: 0; }
   .manual-dose-row { max-width: 100%; }
-  .timeline-phase-heading > strong { font-size: 10px; }
-  .timeline-meta, .timeline-temperature { font-size: 9px; }
-  .timeline-note { font-size: 10px; }
-  .fermentation-timeline.compact .timeline-phase-heading > strong { font-size: 9px; }
-  .fermentation-timeline.compact .timeline-meta { font-size: 8px; }
+  .fermentation-timeline { gap: 4px; }
+  .timeline-phase { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding-bottom: 22px; }
+  .timeline-phase:not(:last-child)::after { top: 40px; left: 19px; }
+  .timeline-marker { width: 40px; height: 40px; }
+  .timeline-marker svg { width: 22px; height: 22px; }
+  .timeline-phase-heading > strong { font-size: 17px; line-height: 1.3; }
+  .timeline-kind { font-size: 12px; }
+  .timeline-dates { gap: 3px 12px; margin-top: 5px; font-size: 14px; }
+  .timeline-times { gap: 10px; margin-top: 3px; font-size: 17px; }
+  .timeline-duration, .timeline-temperature, .timeline-note { font-size: 14px; line-height: 1.5; }
+  .fermentation-timeline.compact .timeline-phase { grid-template-columns: 36px minmax(0,1fr); gap: 10px; padding-bottom: 18px; }
+  .fermentation-timeline.compact .timeline-phase:not(:last-child)::after { top: 36px; left: 17px; }
+  .fermentation-timeline.compact .timeline-marker { width: 36px; height: 36px; }
+  .fermentation-timeline.compact .timeline-marker svg { width: 20px; height: 20px; }
+  .fermentation-timeline.compact .timeline-phase-heading > strong { font-size: 16px; }
+  .fermentation-timeline.compact .timeline-kind { font-size: 12px; }
+  .fermentation-timeline.compact .timeline-dates { font-size: 14px; }
+  .fermentation-timeline.compact .timeline-times { font-size: 16px; }
+  .fermentation-timeline.compact .timeline-duration { font-size: 14px; }
+  .summary-warning { font-size: 14px; }
+  .plan-status, .scheduling-conflict, .scheduling-conflict strong { font-size: 14px; }
+  .phase-lock { margin-left: 0; font-size: 14px; }
+  .phase-duration-limits { margin-left: 0; }
+  .phase-duration-limits > div { grid-template-columns: 1fr; }
+  .availability-hours { gap: 9px; }
+  .availability-hours > p { font-size: 14px; }
+  .optimize-schedule-button { width: 100%; }
+  .phase-count { min-width: 22px; height: 22px; font-size: 12px; }
+  .phase-edit-top > .icon-button { width: 44px; height: 44px; margin-bottom: 0; }
+  .phase-total > span:first-child, .phase-total > span:last-child { font-size: 14px; line-height: 1.45; }
+  .phase-total > strong { font-size: 16px; }
+  .result-panel-heading .eyebrow, .result-live { font-size: 12px; }
+  .result-total > span { color: var(--text-secondary); font-size: 14px; }
+  .result-total > p { color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
+  .ingredient-group-title, .estimate-heading { color: var(--text-secondary); font-size: 12px; letter-spacing: 0; }
+  .ingredient-row { min-height: 42px; font-size: 14px; }
+  .ingredient-row strong { font-size: 17px; }
+  .ingredient-row strong small, .ingredient-row em { color: var(--text-secondary); font-size: 13px; }
+  .mass-note, .rounding-note { color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+  .estimate-values small, .blend-estimates > p { color: var(--text-secondary); font-size: 13px; }
+  .estimate-heading > span:last-child { color: var(--text-secondary); }
+  .practical-suggestions { font-size: 14px; }
+  .practical-suggestions strong { font-size: 15px; }
+  .subsection-title h3 { font-size: 18px; }
+  .phase-duration-control > span { font-size: 14px; }
+  .phase-duration-inputs, .phase-duration-inputs label { min-height: 44px; }
+  .phase-duration-inputs input { min-height: 42px; font-size: 16px; }
+  .phase-duration-inputs small { font-size: 12px; }
+  .result-save { min-height: 48px; }
+  .outcome-main > strong, .outcome-condition { font-size: 15px; }
+  .outcome-score { font-size: 20px; }
+  .yeast-mode-toggle button { min-height: 44px; font-size: 14px; }
+  .strategy-option > strong { min-height: 0; font-size: 16px; }
+  .strategy-option > span, .strategy-option > small { font-size: 14px; line-height: 1.5; }
+  .strategy-option > button { min-height: 44px; font-size: 14px; }
+  .temperature-profile-summary, .assisted-subheading > strong,
+  .assisted-subheading > span, .yeast-conversion-row,
+  .assisted-disclosure summary, .assisted-disclosure > p { font-size: 14px; line-height: 1.5; }
+  .assisted-disclosure summary { min-height: 44px; }
   .backup-actions { justify-content: start; }
   .feedback-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 9px; }
   .feedback-form-section { padding: 17px 0; }

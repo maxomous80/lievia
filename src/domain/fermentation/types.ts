@@ -14,6 +14,12 @@ export type TemperatureEnvironment = 'ambient' | 'dough' | 'refrigerator' | 'cus
 export type YeastMode = 'manual' | 'assisted'
 export type ManualYeastUnit = 'percentage' | 'grams'
 
+export interface UserAvailability {
+  avoidRestHours: boolean
+  unavailableStart: string
+  unavailableEnd: string
+}
+
 export interface FermentationPhase {
   id: string
   type: FermentationPhaseType
@@ -24,6 +30,9 @@ export interface FermentationPhase {
   temperatureC: number
   measuredDoughTemperatureC?: number
   notes: string
+  minimumDurationMinutes?: number
+  maximumDurationMinutes?: number
+  boundaryLocked?: boolean
 }
 
 export interface FermentationConfig {
@@ -33,6 +42,7 @@ export interface FermentationConfig {
   totalDurationMinutes: number
   plannedStartAt: string
   bakingAt: string
+  availability: UserAvailability
   ambientTemperatureC: number
   measuredDoughTemperatureC?: number
   refrigeratorTemperatureC: number
