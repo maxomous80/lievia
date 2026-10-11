@@ -35,6 +35,45 @@ describe('profilo termico semplificato', () => {
     expect(profile.explanation).toContain('non misure')
   })
 
+  it('usa la soluzione esponenziale analitica esatta per fase, con continuità e convergenza', () => {
+    const base = createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z'))
+    const config = {
+      ...base,
+      measuredDoughTemperatureC: 25,
+      ambientTemperatureC: 5,
+      phases: [
+        { ...base.phases[0], id: 'fase-zero', durationMinutes: 0, environment: 'ambient' as const, temperatureC: 5 },
+        { ...base.phases[1], id: 'fase-esatta', durationMinutes: 60, environment: 'ambient' as const, temperatureC: 5 },
+        { ...base.phases[2], id: 'fase-lunga', durationMinutes: 120_000, environment: 'ambient' as const, temperatureC: 5 },
+      ],
+      totalDurationMinutes: 120_060,
+    }
+    const profile = calculateTemperatureProfile(config, { timeConstantMinutes: 120 })
+    const exactPoint = profile.points.find((point) => point.phaseId === 'fase-esatta' && Date.parse(point.at) === Date.parse(config.plannedStartAt) + 60 * 60_000)!
+    const boundary = profile.points.find((point) => point.phaseId === 'fase-lunga')!
+    expect(exactPoint.doughTemperatureC).toBe(5 + (25 - 5) * Math.exp(-60 / 120))
+    expect(boundary.doughTemperatureC).toBe(exactPoint.doughTemperatureC)
+    expect(profile.points.at(-1)?.doughTemperatureC).toBe(5)
+    expect(profile.points.filter(({ phaseId }) => phaseId === 'fase-zero')).toHaveLength(1)
+  })
+
+  it('gestisce analiticamente raffreddamento e riscaldamento', () => {
+    const base = createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z'))
+    const createConfig = (initial: number, environment: number) => ({
+      ...base,
+      measuredDoughTemperatureC: initial,
+      ambientTemperatureC: environment,
+      phases: [{ ...base.phases[0], durationMinutes: 30, environment: 'ambient' as const, temperatureC: environment }],
+      totalDurationMinutes: 30,
+    })
+    const cooling = calculateTemperatureProfile(createConfig(28, 6), { timeConstantMinutes: 90 })
+    const warming = calculateTemperatureProfile(createConfig(6, 28), { timeConstantMinutes: 90 })
+    const coolingValue = cooling.points.at(-1)!.doughTemperatureC!
+    const warmingValue = warming.points.at(-1)!.doughTemperatureC!
+    expect(coolingValue).toBe(6 + (28 - 6) * Math.exp(-30 / 90))
+    expect(warmingValue).toBe(28 + (6 - 28) * Math.exp(-30 / 90))
+  })
+
   it('non inventa una temperatura iniziale o una curva se mancano misure e parametri', () => {
     const profile = calculateTemperatureProfile(createDefaultFermentationConfig())
     expect(profile.status).toBe('insufficient-data')

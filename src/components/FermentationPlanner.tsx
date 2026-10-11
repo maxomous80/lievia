@@ -19,6 +19,8 @@ import {
 } from '../domain/fermentation/schedule'
 import type { FermentationConfig, FermentationPhaseType, FlourGuidanceInput } from '../domain/fermentation/types'
 import { validateFermentationSchedule } from '../domain/fermentation/validation'
+import { useAppData } from '../context/useAppData'
+import { ThermalAnalysis } from './ThermalAnalysis'
 import type { YeastType } from '../models'
 
 const editableTypes: FermentationPhaseType[] = ['mixing', 'initial-rest', 'bulk-fermentation', 'folding', 'dividing', 'refrigeration', 'final-proof']
@@ -55,6 +57,7 @@ function tempForEnvironment(config: FermentationConfig, environment: Fermentatio
 }
 
 export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flourWeight, guidanceInput, onYeastPctChange, onYeastTypeChange, estimatorConfiguration, onEstimatorConfigurationChange, hydrationPct, saltPct, doughWeight, otherIngredientPercentages, onPrint }: FermentationPlannerProps) {
+  const { temperatureSamples, addTemperatureSample, removeTemperatureSample } = useAppData()
   const [showPhases, setShowPhases] = useState(true)
   const [optimizationConflicts, setOptimizationConflicts] = useState<string[]>([])
   const warnings = [
@@ -214,6 +217,15 @@ export function FermentationPlanner({ config, onChange, yeastPct, yeastType, flo
         <div className="temperature-grid"><label className="field"><span>Ambiente</span><div className="input-with-unit"><input aria-label="Temperatura ambiente" type="number" min="-10" max="45" step="0.5" value={config.ambientTemperatureC} onChange={(event) => { const value = Number(event.target.value); if (!Number.isFinite(value)) return; patch({ ambientTemperatureC: value, phases: config.phases.map((phase) => phase.environment === 'ambient' ? { ...phase, temperatureC: value } : phase) }) }} /><small>°C</small></div></label><label className="field"><span>Impasto misurato all’avvio <small>facoltativa</small></span><div className="input-with-unit"><input aria-label="Temperatura iniziale impasto misurata" type="number" min="0" max="40" step="0.5" value={config.measuredDoughTemperatureC ?? ''} placeholder="—" onChange={(event) => patch({ measuredDoughTemperatureC: event.target.value === '' ? undefined : Number(event.target.value) })} /><small>°C</small></div></label><label className="field"><span>Frigorifero</span><div className="input-with-unit"><input aria-label="Temperatura frigorifero" type="number" min="-5" max="20" step="0.5" value={config.refrigeratorTemperatureC} onChange={(event) => { const value = Number(event.target.value); if (!Number.isFinite(value)) return; patch({ refrigeratorTemperatureC: value, phases: config.phases.map((phase) => phase.environment === 'refrigerator' ? { ...phase, temperatureC: value } : phase) }) }} /><small>°C</small></div></label><label className="field"><span>Temperatura finale obiettivo <small>facoltativa</small></span><div className="input-with-unit"><input aria-label="Temperatura finale obiettivo" type="number" min="0" max="40" step="0.5" value={config.targetDoughTemperatureC ?? ''} placeholder="—" onChange={(event) => patch({ targetDoughTemperatureC: event.target.value === '' ? undefined : Number(event.target.value) })} /><small>°C</small></div></label></div>
         <p className="temperature-help"><Thermometer size={12} /> Ambiente, frigorifero e impasto sono distinti. La misura dell’impasto è l’ancoraggio iniziale del profilo.</p>
       </div>
+
+      <ThermalAnalysis
+        config={config}
+        samples={temperatureSamples}
+        estimatorConfiguration={estimatorConfiguration}
+        onEstimatorConfigurationChange={onEstimatorConfigurationChange}
+        onAddSample={addTemperatureSample}
+        onRemoveSample={removeTemperatureSample}
+      />
 
       <div className="fermentation-subsection"><div className="subsection-title"><Snowflake size={15} /><h3>Strategia di fermentazione</h3></div>
         <div className="strategy-controls"><label className="field"><span>Strategia</span><select aria-label="Strategia di fermentazione" value={config.strategy} onChange={(event) => changeStrategy(event.target.value as FermentationConfig['strategy'])}>{Object.entries(STRATEGY_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><button type="button" className="button button-outline template-button" onClick={applyTemplate}><RotateCcw size={14} /> Applica modello</button></div>

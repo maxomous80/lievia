@@ -6,6 +6,7 @@ import { updateTotalDuration } from '../fermentation/schedule'
 import { normalizeLabWorkspace, createAlternativeScenario, createLabSession, patchScenario, prepareScenarioApplication, renameScenario, resetScenario, selectScenario } from './workspace'
 import { calculateScenario, compareScenarios, createRecipeConfiguration, validateRecipePatch, type RecipeConfiguration } from './scenarios'
 import { readStored, writeStored } from '../../lib/storage'
+import { calculateTemperatureProfile } from '../fermentation/temperatureProfile'
 
 const now = '2026-10-10T12:00:00.000Z'
 
@@ -31,6 +32,21 @@ describe('Lievia Lab · dominio scenari', () => {
     expect(session.scenarios[0].configuration).toEqual(before)
     expect(baseline).toEqual(before)
     expect(session.scenarios[0].configuration).not.toBe(baseline)
+  })
+
+  it('mantiene baseline e scenario immutati durante i confronti termici', () => {
+    const baselineConfiguration = makeConfiguration()
+    baselineConfiguration.fermentation.measuredDoughTemperatureC = 24
+    const session = createLabSession({ id: 'session-termica', baselineId: 'base', baselineName: 'Base', baselineConfiguration, scenarioId: 'scenario-termico', now })
+    const scenarioConfiguration = validateRecipePatch(session.scenarios[0].configuration, { fermentation: { ambientTemperatureC: 19 } })
+    expect(scenarioConfiguration.ok).toBe(true)
+    if (!scenarioConfiguration.ok) return
+    const beforeBaseline = structuredClone(session.baselineConfiguration)
+    const beforeScenario = structuredClone(scenarioConfiguration.configuration)
+    calculateTemperatureProfile(session.baselineConfiguration.fermentation, { timeConstantMinutes: 100 })
+    calculateTemperatureProfile(scenarioConfiguration.configuration.fermentation, { timeConstantMinutes: 100 })
+    expect(session.baselineConfiguration).toEqual(beforeBaseline)
+    expect(scenarioConfiguration.configuration).toEqual(beforeScenario)
   })
 
   it('valida patch parziali e rifiuta valori, campi e miscele non validi', () => {
@@ -118,13 +134,12 @@ describe('Lievia Lab · dominio scenari', () => {
     expect(resetScenario(selected, 'scenario-1', now).scenarios[0].configuration.hydrationPct).toBe(session.baselineConfiguration.hydrationPct)
   })
 
-  it('serializza e ripristina sessioni versionate, scartando dati corrotti', () => {
+  it('serializza e ripristina sessioni versionate senza scartare dati corrotti', () => {
     const workspace = { version: 1 as const, activeSessionId: 'lab-session-1', sessions: [makeSession()] }
     writeStored('lievia.test.lab.v1', workspace)
     expect(normalizeLabWorkspace(readStored<unknown>('lievia.test.lab.v1', null))).toEqual(workspace)
-    expect(normalizeLabWorkspace({ version: 9, sessions: [makeSession()] })).toEqual({ version: 1, activeSessionId: null, sessions: [] })
-    const invalid = normalizeLabWorkspace({ version: 1, sessions: [{ id: 'bad' }] })
-    expect(invalid.sessions).toEqual([])
+    expect(() => normalizeLabWorkspace({ version: 9, sessions: [makeSession()] })).toThrow(/non riconosciuto/)
+    expect(() => normalizeLabWorkspace({ version: 1, sessions: [{ id: 'bad' }] })).toThrow(/Nessuno scenario è stato scartato/)
   })
 
   it('preserva tutte le sessioni e gli scenari validi presenti in LocalStorage', () => {

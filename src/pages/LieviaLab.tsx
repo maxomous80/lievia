@@ -8,6 +8,8 @@ import { deriveBlendPropertyRanges, isFlourBlendEligible, missingBlendTechnicalD
 import { calculateScenario, compareScenarios, createRecipeConfiguration, normalizeRecipeConfiguration, recipeToConfiguration, type FermentationPatch, type RecipeConfiguration, type RecipePatch, type ResultClassification } from '../domain/lab/scenarios'
 import { createAlternativeScenario, createLabSession, normalizeLabWorkspace, patchScenario, prepareScenarioApplication, removeScenario, renameScenario, resetScenario, selectScenario, upsertLabSession, type LabSession } from '../domain/lab/workspace'
 import { createDefaultFermentationConfig, formatDuration, STRATEGY_LABELS, toLocalDateTimeValue, updatePhase } from '../domain/fermentation/schedule'
+import { calculateTemperatureProfile } from '../domain/fermentation/temperatureProfile'
+import { ThermalAnalysis } from '../components/ThermalAnalysis'
 import type { FermentationConfig } from '../domain/fermentation/types'
 import type { Flour } from '../models'
 
@@ -72,7 +74,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function LieviaLab() {
-  const { recipes, flourCatalog, pantryEntries, labWorkspace, saveLabWorkspace, saveRecipe } = useAppData()
+  const { recipes, flourCatalog, pantryEntries, labWorkspace, saveLabWorkspace, saveRecipe, estimatorConfiguration, updateEstimatorConfiguration, temperatureSamples, addTemperatureSample, removeTemperatureSample } = useAppData()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -244,6 +246,13 @@ export function LieviaLab() {
   const availableFlours = flourCatalog.filter((flour) => isFlourBlendEligible(flour) && (!showPantryOnly || pantryIds.has(flour.id)))
   const activeRecipeValue = session.sourceRecipeId ?? '__baseline__'
   const duration = scenario.configuration.fermentation.totalDurationMinutes
+  const baselineThermal = calculateTemperatureProfile(session.baselineConfiguration.fermentation, { timeConstantMinutes: estimatorConfiguration.thermalTimeConstantMinutes, initialDoughTemperatureC: estimatorConfiguration.estimatedInitialDoughTemperatureC })
+  const scenarioThermal = calculateTemperatureProfile(scenario.configuration.fermentation, { timeConstantMinutes: estimatorConfiguration.thermalTimeConstantMinutes, initialDoughTemperatureC: estimatorConfiguration.estimatedInitialDoughTemperatureC })
+  const temperatureDeltas = baselineThermal.points.flatMap((point) => {
+    if (point.doughTemperatureC === null) return []
+    const compared = scenarioThermal.points.find(({ at }) => at === point.at)
+    return compared?.doughTemperatureC === null || !compared ? [] : [{ at: point.at, deltaC: compared.doughTemperatureC - point.doughTemperatureC }]
+  })
 
   return <div className="page-stack lab-page">
     <section className="page-intro-row lab-intro"><div><p className="eyebrow">SIMULAZIONE LOCALE · NESSUNA MODIFICA AUTOMATICA</p><h1>Lievia Lab</h1><p className="intro-copy">Confronta una ricetta con scenari alternativi. Solo i comandi espliciti salvano o trasferiscono le modifiche.</p></div><span className="lab-mark"><FlaskConical size={20} /> COSA CAMBIA</span></section>
@@ -292,6 +301,7 @@ export function LieviaLab() {
           <label className="field"><span>Impasto misurato · °C</span><input type="number" min="-10" max="50" step="0.5" value={scenario.configuration.fermentation.measuredDoughTemperatureC ?? ''} placeholder="Non indicata" onChange={(event) => changeTemperature('measuredDoughTemperatureC', event.target.value === '' ? undefined : Number(event.target.value))} /></label>
           <label className="field"><span>Durata piano · ore</span><input type="number" min="0" step="1" value={Math.floor(duration / 60)} onChange={(event) => updateFermentation({ totalDurationMinutes: Number(event.target.value) * 60 + duration % 60 })} /></label>
           <label className="field"><span>Durata residua · minuti</span><input type="number" min="0" max="59" step="5" value={duration % 60} onChange={(event) => updateFermentation({ totalDurationMinutes: Math.floor(duration / 60) * 60 + Number(event.target.value) })} /></label>
+          <label className="field"><span>Impasto iniziale misurato · °C</span><input type="number" min="-10" max="50" step="0.1" value={scenario.configuration.fermentation.measuredDoughTemperatureC ?? ''} placeholder="Non indicata" onChange={(event) => changeTemperature('measuredDoughTemperatureC', event.target.value === '' ? undefined : Number(event.target.value))} /></label>
         </div>
           <div className="lab-phase-editor"><h3>Durata e blocco delle fasi</h3>{scenario.configuration.fermentation.phases.map((phase) => <div className="lab-phase-edit-row" key={`${scenario.id}-${scenario.updatedAt}-${phase.id}`}><label className="field"><span>{phaseLabel(phase.type)} · minuti</span><input type="number" min={phase.minimumDurationMinutes ?? 0} max={phase.maximumDurationMinutes} step="5" defaultValue={phase.durationMinutes} onBlur={(event) => { const durationMinutes = Number(event.currentTarget.value); if (durationMinutes !== phase.durationMinutes) changePhaseDuration(phase.id, durationMinutes) }} /></label><label className="check-line"><input type="checkbox" checked={phase.boundaryLocked === true} onChange={(event) => changePhaseLock(phase.id, event.target.checked)} /><span>Blocca orario</span></label></div>)}</div>
           <label className="check-line lab-availability-toggle"><input type="checkbox" checked={scenario.configuration.fermentation.availability.avoidRestHours} onChange={(event) => updateFermentation({ availability: { avoidRestHours: event.target.checked } })} /><span>Rispetta le mie ore di indisponibilità</span></label>
@@ -314,6 +324,11 @@ export function LieviaLab() {
       <div className="lab-phase-differences">{comparison.phaseDurations.map((phase) => <div className="lab-phase-difference" key={phase.phaseId}><strong>{phase.label}</strong><span>{formatDuration(phase.baselineMinutes)}</span><span>{formatDuration(phase.alternativeMinutes)}</span><span>{phase.deltaMinutes > 0 ? '+' : ''}{formatDuration(Math.abs(phase.deltaMinutes))}{phase.deltaMinutes < 0 ? ' in meno' : phase.deltaMinutes > 0 ? ' in più' : ''}</span></div>)}</div>
       {comparison.phaseChanges.length > 0 && <div className="lab-manual-operations"><h3>Operazioni manuali e disponibilità</h3>{comparison.phaseChanges.map((phase) => <p key={phase.phaseId}><strong>{phase.label}</strong> · riferimento {formatDate(phase.baselineStart)} · scenario {formatDate(phase.alternativeStart)} · {phase.deltaMinutes > 0 ? '+' : ''}{phase.deltaMinutes} min</p>)}</div>}
       <p className="lab-science-note">Il verificatore controlla solo la fattibilità degli orari delle operazioni manuali, le ore di indisponibilità e i lock impostati. Un piano praticabile non è per questo biologicamente ottimale.</p>
+    </section>
+
+    <section className="lab-comparison-section"><div className="section-heading"><div><p className="eyebrow">MODELLO TERMICO · NON BIOLOGICO</p><h2>Profili di temperatura</h2></div></div>
+      <div className="lab-thermal-summary"><span>Riferimento · iniziale {session.baselineConfiguration.fermentation.measuredDoughTemperatureC ?? estimatorConfiguration.estimatedInitialDoughTemperatureC ?? 'n.d.'} °C · ambiente {session.baselineConfiguration.fermentation.ambientTemperatureC} °C · frigorifero {session.baselineConfiguration.fermentation.refrigeratorTemperatureC} °C</span><span>Scenario · iniziale {scenario.configuration.fermentation.measuredDoughTemperatureC ?? estimatorConfiguration.estimatedInitialDoughTemperatureC ?? 'n.d.'} °C · ambiente {scenario.configuration.fermentation.ambientTemperatureC} °C · frigorifero {scenario.configuration.fermentation.refrigeratorTemperatureC} °C</span><span>τ condivisa · {estimatorConfiguration.thermalTimeConstantMinutes ?? 'non impostata'} min · {estimatorConfiguration.thermalTimeConstantProvenance ?? 'provenienza non documentata'}</span>{temperatureDeltas.length > 0 && <span>Differenza scenario-riferimento sugli istanti comuni · media {new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 }).format(temperatureDeltas.reduce((sum, point) => sum + point.deltaC, 0) / temperatureDeltas.length)} °C; descrive solo il modello, non una preferenza o qualità.</span>}</div>
+      <ThermalAnalysis config={scenario.configuration.fermentation} comparisonConfig={session.baselineConfiguration.fermentation} samples={temperatureSamples} estimatorConfiguration={estimatorConfiguration} onEstimatorConfigurationChange={updateEstimatorConfiguration} onAddSample={addTemperatureSample} onRemoveSample={removeTemperatureSample} compact />
     </section>
 
     <section className="lab-actions"><button className="button button-outline" type="button" onClick={saveAsNewRecipe}><Save size={16} /> Salva come nuova ricetta</button><button className="button button-primary" type="button" onClick={applyAsDraft}><ArrowRight size={16} /> Applica scenario</button></section>

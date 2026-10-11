@@ -306,6 +306,45 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
 .plan-status.incomplete { color: #876b42; background: #f2ecdc; }
 .plan-status.complete { color: #526f52; background: #e8ece2; }
 .fermentation-subsection { margin-left: 37px; padding: 16px 0; border-top: 1px solid #e4dfd4; }
+.thermal-analysis { margin: 12px 0 12px 37px; padding: 0; border-top: 1px solid var(--line); }
+.thermal-analysis > summary { min-height: 48px; display: flex; align-items: center; color: var(--sage-dark); cursor: pointer; font-size: 14px; font-weight: 650; }
+.thermal-analysis-body { display: grid; gap: 12px; min-width: 0; padding: 0 0 14px; }
+.thermal-disclaimer, .thermal-status, .thermal-provenance, .thermal-calibration-details > p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.thermal-meta-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.thermal-meta-grid > span { display: grid; gap: 5px; min-width: 0; padding: 9px; border-left: 2px solid var(--sage); background: rgba(255,255,255,.42); }
+.thermal-meta-grid small, .thermal-sample-row small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.thermal-meta-grid strong { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.thermal-parameter-fields, .thermal-sample-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.thermal-parameter-fields .field, .thermal-sample-form .field { min-width: 0; }
+.thermal-provenance, .thermal-sample-form h4, .thermal-note-field, .thermal-form-error, .thermal-sample-form > button { grid-column: 1 / -1; }
+.thermal-chart-wrap { min-width: 0; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.55); }
+.thermal-chart { display: block; width: 100%; height: 190px; }
+.thermal-empty { margin: 0; padding: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.thermal-legend { display: flex; flex-wrap: wrap; gap: 12px 17px; color: var(--muted); font-size: 11px; }
+.thermal-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.thermal-line { width: 18px; height: 2px; background: var(--terracotta-dark); }
+.thermal-line-baseline { background: repeating-linear-gradient(90deg, var(--sage-dark) 0 5px, transparent 5px 8px); }
+.thermal-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sage-dark); }
+.thermal-dot-calibration { background: #b48b46; }
+.thermal-metrics, .thermal-calibration-status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; padding: 10px 0; border-block: 1px solid var(--line); color: var(--ink); font-size: 12px; }
+.thermal-calibration-details { border-top: 1px solid var(--line); }
+.thermal-calibration-details > summary, .experiment-metadata > summary { min-height: 44px; display: flex; align-items: center; color: var(--sage-dark); cursor: pointer; font-size: 13px; font-weight: 650; }
+.thermal-calibration-details > p { margin: 8px 0; }
+.thermal-sample-form { padding-top: 10px; border-top: 1px solid var(--line); }
+.thermal-sample-form h4, .thermal-sample-list h4 { margin: 0; font-family: var(--serif); font-size: 16px; font-weight: 500; }
+.thermal-sample-form > button { justify-self: start; min-height: 44px; }
+.thermal-sample-list { display: grid; gap: 0; min-width: 0; }
+.thermal-sample-list h4 { margin-bottom: 5px; }
+.thermal-sample-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; padding: 9px 0; border-top: 1px solid var(--line); }
+.thermal-sample-row > span { display: grid; min-width: 0; gap: 3px; }
+.thermal-sample-row strong { font-size: 13px; }
+.thermal-sample-row button { flex: 0 0 44px; }
+.storage-warning { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 16px; padding: 12px; border: 1px solid #d5aa84; background: #fbf0e4; color: #68452c; font-size: 13px; line-height: 1.55; }
+.storage-warning button { flex: 0 0 44px; }
+.experiment-metadata { grid-column: 1 / -1; min-width: 0; border-top: 1px solid var(--line); }
+.experiment-metadata-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.experiment-metadata > p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.lab-thermal-summary { display: grid; gap: 7px; color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .subsection-title { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; color: var(--sage-dark); }
 .subsection-title h3 { margin: 0; font-family: var(--serif); font-size: 15px; font-weight: 500; }
 .subsection-title > div { display: flex; align-items: center; gap: 8px; }
@@ -763,6 +802,12 @@ h1 { margin: 10px 0 0; font-size: 39px; line-height: 1.1; }
   .pantry-card-action { min-height: 44px; font-size: 14px; }
   .backup-actions { justify-content: start; }
   .feedback-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 9px; }
+  .thermal-analysis { margin-left: 0; }
+  .thermal-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .thermal-chart { height: 170px; }
+  .thermal-sample-form { grid-template-columns: 1fr; }
+  .thermal-sample-form .field, .thermal-sample-form h4, .thermal-sample-form > button, .thermal-note-field, .thermal-form-error { grid-column: 1; }
+  .experiment-metadata-grid { grid-template-columns: 1fr; }
   .feedback-form-section { padding: 17px 0; }
   .feedback-form .form-bottom { align-items: end; flex-wrap: wrap; }
   .feedback-form .form-bottom > span { flex-basis: 100%; }

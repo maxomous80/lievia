@@ -136,11 +136,16 @@ export function upsertLabSession(workspace: LabWorkspace, session: LabSession): 
 }
 
 export function normalizeLabWorkspace(value: unknown): LabWorkspace {
-  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.sessions)) return EMPTY_LAB_WORKSPACE
-  const sessions = value.sessions.flatMap((candidate) => {
+  if (value === null || value === undefined) return EMPTY_LAB_WORKSPACE
+  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.sessions)) {
+    throw new TypeError('L’archivio Lievia Lab è incompleto o non riconosciuto. Non è stato sovrascritto; esporta o recupera una copia valida.')
+  }
+  const sessions = value.sessions.map((candidate) => {
     const session = normalizeSession(candidate)
-    return session ? [session] : []
+    if (!session) throw new TypeError('Una sessione o uno scenario Lievia Lab non è valido. Nessuno scenario è stato scartato.')
+    return session
   })
+  if (new Set(sessions.map(({ id }) => id)).size !== sessions.length) throw new TypeError('L’archivio Lievia Lab contiene ID di sessione duplicati.')
   const requestedActive = typeof value.activeSessionId === 'string' ? value.activeSessionId : null
   return {
     version: 1,
@@ -154,27 +159,33 @@ function normalizeSession(value: unknown): LabSession | null {
     typeof value.baselineName !== 'string' || !Array.isArray(value.scenarios) || typeof value.createdAt !== 'string' || typeof value.updatedAt !== 'string') return null
   const baselineConfiguration = normalizeRecipeConfiguration(value.baselineConfiguration)
   if (!baselineConfiguration) return null
-  const scenarios = value.scenarios.flatMap((candidate) => {
+  const scenarios = value.scenarios.map((candidate) => {
     if (!isRecord(candidate) || typeof candidate.id !== 'string' || !candidate.id || typeof candidate.name !== 'string' ||
-      typeof candidate.createdAt !== 'string' || typeof candidate.updatedAt !== 'string') return []
+      !isValidDate(candidate.createdAt) || !isValidDate(candidate.updatedAt)) return null
     const configuration = normalizeRecipeConfiguration(candidate.configuration)
-    return configuration ? [{ id: candidate.id, name: candidate.name, configuration, createdAt: candidate.createdAt, updatedAt: candidate.updatedAt }] : []
+    return configuration ? { id: candidate.id, name: candidate.name, configuration, createdAt: candidate.createdAt, updatedAt: candidate.updatedAt } : null
   })
-  if (!scenarios.length) return null
-  const selectedScenarioId = typeof value.selectedScenarioId === 'string' && scenarios.some(({ id }) => id === value.selectedScenarioId)
+  if (!scenarios.length || scenarios.some((scenario) => scenario === null)) return null
+  const validScenarios = scenarios as LabScenario[]
+  if (new Set(validScenarios.map(({ id }) => id)).size !== validScenarios.length) return null
+  const selectedScenarioId = typeof value.selectedScenarioId === 'string' && validScenarios.some(({ id }) => id === value.selectedScenarioId)
     ? value.selectedScenarioId
-    : scenarios[0].id
+    : validScenarios[0].id
   return {
     id: value.id,
     baselineId: value.baselineId,
     baselineName: value.baselineName,
     baselineConfiguration,
     sourceRecipeId: typeof value.sourceRecipeId === 'string' ? value.sourceRecipeId : undefined,
-    scenarios,
+    scenarios: validScenarios,
     selectedScenarioId,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
   }
+}
+
+function isValidDate(value: unknown): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value))
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

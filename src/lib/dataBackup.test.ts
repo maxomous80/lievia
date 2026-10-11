@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultDraft } from '../data/defaults'
 import type { DoughOutcome } from '../domain/feedback/outcomes'
 import type { PantryEntry } from '../domain/flours/pantry'
+import type { TemperatureMeasurementSample } from '../domain/fermentation/thermalCalibration'
 import { createDefaultEstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
 import { OFFICIAL_FLOURS } from '../data/officialFlours'
+import { createDefaultFermentationConfig } from '../domain/fermentation/schedule'
+import { createLabSession, EMPTY_LAB_WORKSPACE } from '../domain/lab/workspace'
+import { createRecipeConfiguration } from '../domain/lab/scenarios'
 import type { Recipe } from '../models'
 import { mergeBackup, serializeBackup, type BackupData } from './dataBackup'
 
@@ -35,16 +39,22 @@ const pantryEntry: PantryEntry = {
   notes: 'Sacchetto aperto',
   updatedAt: '2026-10-10T12:00:00.000Z',
 }
+const thermalSample: TemperatureMeasurementSample = {
+  id: 'campione-1', at: '2026-10-10T12:30:00.000Z', temperatureC: 20, unit: 'C',
+  source: 'Sonda manuale', sensorId: 'sensore-1', uncertaintyC: 0.2, note: 'Centro massa', split: 'validation',
+}
 const empty: BackupData = {
   recipes: [], customFlours: [], outcomes: [], calibrationRecords: [], pantryEntries: [],
   estimatorConfiguration: createDefaultEstimatorConfiguration(),
+  labWorkspace: EMPTY_LAB_WORKSPACE,
+  temperatureSamples: [],
 }
 
 describe('backup Lievia', () => {
   it('serializza e importa records senza eseguire o sovrascrivere dati', () => {
     const serialized = serializeBackup({ ...empty, recipes: [recipe], customFlours: [flour] }, '2026-10-10T12:00:00.000Z')
     const result = mergeBackup(serialized, { ...empty, recipes: [recipe], customFlours: [flour] })
-    expect(result.added).toEqual({ recipes: 0, customFlours: 0, outcomes: 0, calibrationRecords: 0, pantryEntries: 0 })
+    expect(result.added).toEqual({ recipes: 0, customFlours: 0, outcomes: 0, calibrationRecords: 0, pantryEntries: 0, labSessions: 0, temperatureSamples: 0 })
     expect(result.data.recipes).toEqual([recipe])
     expect(result.data.customFlours).toEqual([flour])
   })
@@ -73,9 +83,34 @@ describe('backup Lievia', () => {
   it('accetta i backup precedenti senza dispensa senza modificare le voci locali', () => {
     const backup = JSON.parse(serializeBackup(empty)) as Record<string, unknown>
     delete backup.pantryEntries
+    backup.version = 1
+    delete backup.labWorkspace
     const result = mergeBackup(JSON.stringify(backup), { ...empty, pantryEntries: [pantryEntry] })
     expect(result.data.pantryEntries).toEqual([pantryEntry])
     expect(result.added.pantryEntries).toBe(0)
+  })
+
+  it('include e ripristina sessioni e scenari Lab nei backup v2', () => {
+    const fermentation = createDefaultFermentationConfig(new Date('2026-10-10T12:00:00.000Z'))
+    const configuration = createRecipeConfiguration({ ...createDefaultDraft(), name: recipe.name, fermentation }, fermentation)
+    const session = createLabSession({
+      id: 'lab-session', baselineId: 'recipe:ricetta-1', baselineName: recipe.name,
+      baselineConfiguration: configuration, sourceRecipeId: recipe.id,
+      scenarioId: 'scenario-1', now: '2026-10-10T12:00:00.000Z',
+    })
+    const workspace = { version: 1 as const, activeSessionId: session.id, sessions: [session] }
+    const serialized = serializeBackup({ ...empty, labWorkspace: workspace }, '2026-10-10T12:00:00.000Z')
+    expect(JSON.parse(serialized).version).toBe(2)
+    const imported = mergeBackup(serialized, empty)
+    expect(imported.data.labWorkspace).toEqual(workspace)
+    expect(imported.added.labSessions).toBe(1)
+  })
+
+  it('include i campioni termici completi nel backup v2', () => {
+    const serialized = serializeBackup({ ...empty, temperatureSamples: [thermalSample] })
+    const imported = mergeBackup(serialized, empty)
+    expect(imported.data.temperatureSamples).toEqual([thermalSample])
+    expect(imported.added.temperatureSamples).toBe(1)
   })
 
   it('rifiuta JSON non valido e strutture di backup malformate', () => {

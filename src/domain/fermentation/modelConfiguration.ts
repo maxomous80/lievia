@@ -34,6 +34,7 @@ export interface EstimatorConfiguration {
   version: 1
   selectedModelId: string
   thermalTimeConstantMinutes?: number
+  thermalTimeConstantProvenance?: string
   estimatedInitialDoughTemperatureC?: number
   freshPerInstantDry?: number
   freshPerActiveDry?: number
@@ -52,6 +53,7 @@ export function normalizeEstimatorConfiguration(value: unknown): EstimatorConfig
   return {
     ...defaults,
     thermalTimeConstantMinutes: positive(candidate.thermalTimeConstantMinutes),
+    thermalTimeConstantProvenance: typeof candidate.thermalTimeConstantProvenance === 'string' ? candidate.thermalTimeConstantProvenance : undefined,
     estimatedInitialDoughTemperatureC: typeof initial === 'number' && Number.isFinite(initial) && initial >= -10 && initial <= 50 ? initial : undefined,
     freshPerInstantDry: positive(candidate.freshPerInstantDry),
     freshPerActiveDry: positive(candidate.freshPerActiveDry),

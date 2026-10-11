@@ -3,17 +3,21 @@ import { isCalibrationRecord, type CalibrationRecord } from '../domain/fermentat
 import { normalizeEstimatorConfiguration, type EstimatorConfiguration } from '../domain/fermentation/modelConfiguration'
 import { isDoughOutcome, type DoughOutcome } from '../domain/feedback/outcomes'
 import { normalizePantryEntries, type PantryEntry } from '../domain/flours/pantry'
+import { normalizeLabWorkspace, type LabWorkspace } from '../domain/lab/workspace'
+import { normalizeTemperatureSamples, validateTemperatureSamples, type TemperatureMeasurementSample } from '../domain/fermentation/thermalCalibration'
 import type { Flour, Recipe } from '../models'
 
 export interface LieviaBackup {
   format: 'lievia-backup'
-  version: 1
+  version: 2
   exportedAt: string
   recipes: Recipe[]
   customFlours: Flour[]
   outcomes: DoughOutcome[]
   calibrationRecords: CalibrationRecord[]
   pantryEntries?: PantryEntry[]
+  labWorkspace?: LabWorkspace
+  temperatureSamples?: TemperatureMeasurementSample[]
   estimatorConfiguration: EstimatorConfiguration
 }
 
@@ -24,15 +28,17 @@ export interface BackupData {
   calibrationRecords: CalibrationRecord[]
   pantryEntries: PantryEntry[]
   estimatorConfiguration: EstimatorConfiguration
+  labWorkspace: LabWorkspace
+  temperatureSamples: TemperatureMeasurementSample[]
 }
 
 export interface BackupMergeResult {
   data: BackupData
-  added: { recipes: number; customFlours: number; outcomes: number; calibrationRecords: number; pantryEntries: number }
+  added: { recipes: number; customFlours: number; outcomes: number; calibrationRecords: number; pantryEntries: number; labSessions: number; temperatureSamples: number }
 }
 
 export function serializeBackup(data: BackupData, exportedAt = new Date().toISOString()): string {
-  const backup: LieviaBackup = { format: 'lievia-backup', version: 1, exportedAt, ...data }
+  const backup: LieviaBackup = { format: 'lievia-backup', version: 2, exportedAt, ...data }
   return JSON.stringify(backup, null, 2)
 }
 
@@ -43,23 +49,32 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
   } catch {
     throw new TypeError('Il file non contiene JSON valido.')
   }
-  if (!isRecord(parsed) || parsed.format !== 'lievia-backup' || parsed.version !== 1 ||
+  if (!isRecord(parsed) || parsed.format !== 'lievia-backup' || (parsed.version !== 1 && parsed.version !== 2) ||
     !isDate(parsed.exportedAt) ||
     !Array.isArray(parsed.recipes) || !Array.isArray(parsed.customFlours) || !Array.isArray(parsed.outcomes) ||
     !Array.isArray(parsed.calibrationRecords) || !parsed.recipes.every(isRecipeShape) ||
     !parsed.customFlours.every(isCustomFlour) || !parsed.outcomes.every(isDoughOutcome) ||
     !parsed.calibrationRecords.every(isCalibrationRecord) ||
+    (parsed.version === 2 && (!isRecord(parsed.labWorkspace) || !Array.isArray(parsed.labWorkspace.sessions))) ||
+    (parsed.temperatureSamples !== undefined && (!Array.isArray(parsed.temperatureSamples) || !validateTemperatureSamples(parsed.temperatureSamples as TemperatureMeasurementSample[]).valid)) ||
     (parsed.pantryEntries !== undefined && (!Array.isArray(parsed.pantryEntries) || !parsed.pantryEntries.every(isPantryEntry)))) {
     throw new TypeError('Il file non è un backup Lievia valido o contiene dati non riconosciuti.')
   }
 
   const recipes = normalizeRecipes(parsed.recipes)
+  if (recipes.length !== parsed.recipes.length) throw new TypeError('Il backup contiene ricette non normalizzabili. Nessun dato è stato importato; recupera o correggi il file.')
+  const importedLabWorkspace = parsed.version === 2 ? normalizeLabWorkspace(parsed.labWorkspace) : undefined
+  const importedTemperatureSamples = normalizeTemperatureSamples(parsed.temperatureSamples ?? [])
+  const addedTemperatureSamples = appendNewById(current.temperatureSamples, importedTemperatureSamples)
   const addedRecipes = appendNewById(current.recipes, recipes)
   const addedFlours = appendNewById(current.customFlours, parsed.customFlours)
   const addedOutcomes = appendNewById(current.outcomes, parsed.outcomes)
   const addedCalibrationRecords = appendNewById(current.calibrationRecords, parsed.calibrationRecords)
   const importedPantryEntries = normalizePantryEntries(parsed.pantryEntries ?? [])
   const addedPantryEntries = appendNewByFlourId(current.pantryEntries, importedPantryEntries)
+  const addedLabSessions = importedLabWorkspace
+    ? appendNewById(current.labWorkspace.sessions, importedLabWorkspace.sessions)
+    : { items: [] as LabWorkspace['sessions'] }
   const importedEstimatorConfiguration = normalizeEstimatorConfiguration(parsed.estimatorConfiguration)
   const useImportedEstimatorConfiguration = isDefaultEstimatorConfiguration(current.estimatorConfiguration)
   return {
@@ -70,6 +85,8 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
       calibrationRecords: [...current.calibrationRecords, ...addedCalibrationRecords.items],
       pantryEntries: [...current.pantryEntries, ...addedPantryEntries.items],
       estimatorConfiguration: useImportedEstimatorConfiguration ? importedEstimatorConfiguration : current.estimatorConfiguration,
+      labWorkspace: mergeLabWorkspace(current.labWorkspace, importedLabWorkspace, addedLabSessions.items),
+      temperatureSamples: [...current.temperatureSamples, ...addedTemperatureSamples.items],
     },
     added: {
       recipes: addedRecipes.items.length,
@@ -77,8 +94,18 @@ export function mergeBackup(serialized: string, current: BackupData): BackupMerg
       outcomes: addedOutcomes.items.length,
       calibrationRecords: addedCalibrationRecords.items.length,
       pantryEntries: addedPantryEntries.items.length,
+      labSessions: addedLabSessions.items.length,
+      temperatureSamples: addedTemperatureSamples.items.length,
     },
   }
+}
+
+function mergeLabWorkspace(current: LabWorkspace, imported: LabWorkspace | undefined, addedSessions: LabWorkspace['sessions']): LabWorkspace {
+  if (!imported || !addedSessions.length) return current
+  const activeSessionId = imported.activeSessionId && addedSessions.some(({ id }) => id === imported.activeSessionId)
+    ? imported.activeSessionId
+    : current.activeSessionId
+  return { version: 1, activeSessionId, sessions: [...current.sessions, ...addedSessions] }
 }
 
 function appendNewByFlourId(existing: PantryEntry[], incoming: PantryEntry[]) {

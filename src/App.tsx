@@ -2,6 +2,7 @@ import { HashRouter, NavLink, Route, Routes, useLocation } from 'react-router-do
 import { BookOpen, Calculator, FlaskConical, Home, MessageCircle, Wheat } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { AppProvider } from './context/AppContext'
+import { useAppData } from './context/useAppData'
 import { Dashboard } from './pages/Dashboard'
 import { FlourLibrary } from './pages/FlourLibrary'
 import { RecipeBook } from './pages/RecipeBook'
@@ -25,6 +26,7 @@ const navigation = [
 ]
 
 function AppShell() {
+  const { storageError, dismissStorageError } = useAppData()
   const location = useLocation()
   const titles: Record<string, string> = {
     '/': 'Il tuo laboratorio',
@@ -56,6 +58,7 @@ function AppShell() {
       <div className="main-column">
         <header className="topbar"><p>{titles[location.pathname] ?? 'Lievia'}</p><div className="topbar-user"><span className="user-avatar">L</span><span>Il mio spazio</span></div></header>
         <main className="main-content">
+          {storageError && <div className="storage-warning" role="alert"><span>{storageError}</span><button type="button" className="icon-button" aria-label="Chiudi avviso di salvataggio" onClick={dismissStorageError}>×</button></div>}
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/impasto" element={<DoughBuilder key={location.search} />} />

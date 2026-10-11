@@ -3,6 +3,8 @@ import type { FermentationConfig, FermentationPhase } from './types'
 export interface ThermalModelParameters {
   timeConstantMinutes?: number
   initialDoughTemperatureC?: number
+  timeConstantProvenance?: string
+  modelVersion?: string
 }
 
 export interface TemperatureProfilePoint {
@@ -15,6 +17,7 @@ export interface TemperatureProfilePoint {
   refrigeratorTemperatureC: number
   doughTemperatureC: number | null
   doughTemperatureSource: 'measured' | 'estimated' | 'unknown'
+  measurementRole: 'assimilated' | 'independent' | 'model'
 }
 
 export interface TemperatureProfile {
@@ -41,6 +44,7 @@ export function calculateTemperatureProfile(
   parameters: ThermalModelParameters = {},
 ): TemperatureProfile {
   const errors = validateThermalParameters(parameters)
+  if (!Number.isFinite(Date.parse(config.plannedStartAt))) errors.push('La data iniziale del profilo termico non è valida.')
   for (const phase of config.phases) {
     if (!Number.isFinite(phase.durationMinutes) || phase.durationMinutes < 0) {
       errors.push(`La durata della fase ${phase.id} deve essere un numero non negativo.`)
@@ -71,13 +75,16 @@ export function calculateTemperatureProfile(
       doughTemperatureSource = 'measured'
     }
     const surroundings = surroundingTemperature(config, phase)
-    appendPoint(points, phase, elapsedMinutes, surroundings, config, doughTemperature, doughTemperatureSource)
+    appendPoint(points, phase, elapsedMinutes, surroundings, config, doughTemperature, doughTemperatureSource, doughTemperatureSource === 'measured' ? 'assimilated' : 'model')
 
     let remaining = phase.durationMinutes
+    const phaseInitialTemperature = doughTemperature
+    const phaseStartMinutes = elapsedMinutes
     while (remaining > 0) {
       const step = Math.min(15, remaining)
-      if (doughTemperature !== null && surroundings.temperatureC !== null && parameters.timeConstantMinutes !== undefined) {
-        doughTemperature = surroundings.temperatureC + (doughTemperature - surroundings.temperatureC) * Math.exp(-step / parameters.timeConstantMinutes)
+      const phaseElapsedMinutes = phaseStartMinutes + phase.durationMinutes - remaining + step - phaseStartMinutes
+      if (phaseInitialTemperature !== null && surroundings.temperatureC !== null && parameters.timeConstantMinutes !== undefined) {
+        doughTemperature = surroundings.temperatureC + (phaseInitialTemperature - surroundings.temperatureC) * Math.exp(-phaseElapsedMinutes / parameters.timeConstantMinutes)
         doughTemperatureSource = 'estimated'
       } else if (surroundings.temperatureC === null || parameters.timeConstantMinutes === undefined) {
         doughTemperature = null
@@ -85,7 +92,7 @@ export function calculateTemperatureProfile(
       }
       elapsedMinutes += step
       remaining -= step
-      appendPoint(points, phase, elapsedMinutes, surroundings, config, doughTemperature, doughTemperatureSource)
+      appendPoint(points, phase, elapsedMinutes, surroundings, config, doughTemperature, doughTemperatureSource, 'model')
     }
   }
 
@@ -98,7 +105,7 @@ export function calculateTemperatureProfile(
         ? 'La temperatura iniziale è misurata; i punti successivi sono stime del modello termico semplificato, non misure.'
         : estimatedStart !== undefined
           ? 'La temperatura iniziale e i punti successivi sono stime del modello termico semplificato, non misure; l’incertezza non è calibrata.'
-          : 'Le misure inserite all’inizio di una fase ancorano i tratti successivi, che sono stime del modello termico semplificato, non misure.'
+          : 'Le misure assimilate all’inizio delle fasi ancorano i tratti successivi, che sono stime del modello termico semplificato, non misure.'
       : 'Curva non stimata: servono una costante termica esplicita e una temperatura iniziale misurata o inserita come ipotesi.',
   }
 }
@@ -118,6 +125,7 @@ function appendPoint(
   config: FermentationConfig,
   doughTemperatureC: number | null,
   doughTemperatureSource: TemperatureProfilePoint['doughTemperatureSource'],
+  measurementRole: TemperatureProfilePoint['measurementRole'],
 ) {
   const at = new Date(new Date(config.plannedStartAt).getTime() + elapsedMinutes * 60_000).toISOString()
   const previous = points[points.length - 1]
@@ -132,5 +140,6 @@ function appendPoint(
     refrigeratorTemperatureC: config.refrigeratorTemperatureC,
     doughTemperatureC,
     doughTemperatureSource,
+    measurementRole,
   })
 }
