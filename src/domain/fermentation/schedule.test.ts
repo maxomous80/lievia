@@ -11,6 +11,7 @@ import {
   createDefaultFermentationConfig,
   createStrategyPhases,
   phaseDurationTotal,
+  reanchorExpiredSchedule,
   updatePhase,
   updateTotalDuration,
 } from './schedule'
@@ -38,6 +39,20 @@ describe('pianificazione temporale', () => {
   it('calcola la cottura a partire dall’inizio, anche oltre 24 ore', () => {
     const bake = calculateBakeFromStart('2026-10-10T08:15:00.000Z', 31 * 60 + 45)
     expect(bake.toISOString()).toBe('2026-10-11T16:00:00.000Z')
+  })
+
+  it('sposta in avanti un piano scaduto mantenendo durata e struttura delle fasi', () => {
+    const stale = createDefaultFermentationConfig(new Date('2026-10-09T12:00:00.000Z'))
+    const now = new Date('2026-10-11T12:00:00.000Z')
+    const preferred = createDefaultFermentationConfig(now)
+    const refreshed = reanchorExpiredSchedule(stale, now, preferred.bakingAt)
+
+    expect(Date.parse(refreshed.plannedStartAt)).toBeGreaterThan(now.getTime())
+    expect(refreshed.bakingAt).toBe(preferred.bakingAt)
+    expect(Date.parse(refreshed.bakingAt) - Date.parse(refreshed.plannedStartAt)).toBe(stale.totalDurationMinutes * 60_000)
+    expect(refreshed.totalDurationMinutes).toBe(stale.totalDurationMinutes)
+    expect(refreshed.phases.map(({ type, durationMinutes }) => ({ type, durationMinutes })))
+      .toEqual(stale.phases.map(({ type, durationMinutes }) => ({ type, durationMinutes })))
   })
 
   it('mantiene fasi cronologiche attraverso la mezzanotte', () => {

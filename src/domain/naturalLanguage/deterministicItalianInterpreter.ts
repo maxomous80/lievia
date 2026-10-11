@@ -16,15 +16,15 @@ const NUMBER_WORDS: Record<string, number> = {
 
 const NUMBER_TOKEN = '(?:-?\\d+(?:[.,]\\d+)?|quarantotto|ventidue|ventiquattro|ventuno|diciassette|diciotto|diciannove|quattordici|quindici|sedici|tredici|undici|dodici|dieci|cinque|quattro|sette|otto|nove|zero|una|uno|un|due|tre|sei|venti|trenta|cento)'
 const STYLE_ALIASES: Array<{ style: PizzaStyle; expression: RegExp }> = [
-  { style: 'napoletana', expression: /\bnapoletan[ae]\b/ },
-  { style: 'contemporanea', expression: /\bcontemporane[ae]\b/ },
-  { style: 'romana', expression: /\broman[ae]\b/ },
+  { style: 'napoletana', expression: /\bnapoletan[aeo]s?\b/ },
+  { style: 'contemporanea', expression: /\bcontemporane[aeo]s?\b/ },
+  { style: 'romana', expression: /\broman[aeo]s?\b/ },
   { style: 'teglia', expression: /\b(?:in\s+)?teglia\b/ },
   { style: 'padellino', expression: /\bpadellino\b/ },
   { style: 'focaccia', expression: /\bfocacci[ae]\b/ },
 ]
 const WEEKDAYS = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato']
-const GENERIC_FLOUR_WORDS = new Set(['farina', 'farine', 'usa', 'utilizza', 'scegli', 'metti', 'miscela', 'con', 'di', 'del', 'della', 'dello', 'dei', 'degli', 'delle', 'il', 'lo', 'la', 'i', 'gli', 'le', 'solo', 'percento', 'percentuale', 'idratazione', 'acqua', 'sale', 'olio', 'lievito'])
+const GENERIC_FLOUR_WORDS = new Set(['farina', 'farine', 'usa', 'utilizza', 'scegli', 'metti', 'miscela', 'con', 'di', 'del', 'della', 'dello', 'dei', 'degli', 'delle', 'il', 'lo', 'la', 'i', 'gli', 'le', 'e', 'solo', 'percento', 'percentuale', 'idratazione', 'acqua', 'sale', 'olio', 'lievito', 'impasto'])
 
 export class DeterministicItalianInterpreter implements NaturalLanguageInterpreter {
   interpret(text: string, context: NaturalLanguageContext): NaturalLanguageInterpretation {
@@ -50,27 +50,62 @@ export class DeterministicItalianInterpreter implements NaturalLanguageInterpret
     for (const { style, expression } of STYLE_ALIASES) {
       if (expression.test(normalizedText)) propose('style', style, text)
     }
-    for (const match of normalizedText.matchAll(new RegExp(`\\b(${NUMBER_TOKEN})\\s*(?:pizze|panetti?|palline?)\\b`, 'g'))) {
+    for (const match of normalizedText.matchAll(new RegExp(`\\b(${NUMBER_TOKEN})\\s*(?:pizze|panetti?|palline?|pezzi)\\b`, 'g'))) {
       const value = numberValue(match[1])
       if (value !== undefined) propose('ballCount', value, match[0])
     }
+    const countCorrection = normalizedText.match(new RegExp(`\\b(?:ma anche|oppure)\\s+(${NUMBER_TOKEN})\\b`))
+    if (countCorrection && /\b(?:pizze|panetti?|palline?)\b/.test(normalizedText.slice(0, countCorrection.index))) {
+      const value = numberValue(countCorrection[1])
+      if (value !== undefined) propose('ballCount', value, countCorrection[0])
+    }
 
-    for (const match of normalizedText.matchAll(new RegExp(`\\b(?:panetti?|palline?)\\s*(?:da|di)?\\s*(${NUMBER_TOKEN})\\s*(?:g|gr|grammi?|grammos?)\\b|\\b(${NUMBER_TOKEN})\\s*(?:g|gr|grammi?|grammos?)\\s*(?:per|a)\\s*(?:panetto|pallina)\\b`, 'g'))) {
+    for (const match of normalizedText.matchAll(new RegExp(`\\b(?:panetti?|palline?|pizze?)\\s*(?:da|di)\\s*(${NUMBER_TOKEN})\\s*(?:(?:g|gr|grammi?|grammos?)\\b)?(?:\\s+ciascun[oaie])?|\\b(${NUMBER_TOKEN})\\s*(?:g|gr|grammi?|grammos?)\\s*(?:per|a)\\s*(?:panetto|pallina)\\b`, 'g'))) {
       const value = numberValue(match[1] ?? match[2])
       if (value !== undefined) propose('ballWeight', value, match[0])
     }
+    for (const match of normalizedText.matchAll(new RegExp(`\\b(${NUMBER_TOKEN})\\s*(?:g|gr|grammi?|grammos?)\\s+ciascun[oaie]\\b`, 'g'))) {
+      const value = numberValue(match[1])
+      if (value !== undefined && /\b(?:panetti?|palline?|pizze?)\b/.test(normalizedText)) propose('ballWeight', value, match[0])
+    }
 
-    for (const match of normalizedText.matchAll(new RegExp(`\\b(?:peso|massa|impasto)\\s+(?:totale\\s+)?(?:di\\s+)?(${NUMBER_TOKEN})\\s*(kg|g|grammi?)\\b`, 'g'))) {
+    for (const match of normalizedText.matchAll(new RegExp(`\\b(?:peso|massa|impasto)\\s+(?:(?:totale|complessiv[oa])\\s+)?(?:da|di)?\\s*(${NUMBER_TOKEN})\\s*(kg|g|grammi?)\\b`, 'g'))) {
       const value = numberValue(match[1])
       if (value !== undefined) propose('totalDoughWeight', value * (match[2] === 'kg' ? 1000 : 1), match[0])
     }
+    for (const match of normalizedText.matchAll(new RegExp(`\\b(${NUMBER_TOKEN})\\s*(kg|g|grammi?)\\s+(?:di\\s+)?impasto\\s+(?:totale|complessiv[oa])\\b`, 'g'))) {
+      const value = numberValue(match[1])
+      if (value !== undefined) propose('totalDoughWeight', value * (match[2] === 'kg' ? 1000 : 1), match[0])
+    }
+    for (const match of normalizedText.matchAll(new RegExp(`\\b(${NUMBER_TOKEN})\\s*(kg|g|grammi?)\\s+(?:di\\s+)?(?:impasto\\s+)?(?:totale|complessiv[oa])\\b`, 'g'))) {
+      const value = numberValue(match[1])
+      if (value !== undefined) propose('totalDoughWeight', value * (match[2] === 'kg' ? 1000 : 1), match[0])
+    }
+    if (/\b(?:un|uno) chilo e mezzo\b/.test(normalizedText) && /\b(?:impasto|massa)\b/.test(normalizedText)) {
+      propose('totalDoughWeight', 1500, normalizedText.match(/(?:un|uno) chilo e mezzo[^,.!?;]*/)?.[0] ?? text)
+    }
 
-    collectPercentage(normalizedText, /(?:idratazione|acqua)\s+(?:al|a|di)?\s*(?:circa\s*)?(__NUMBER__)\s*%?/g, (value, source) => propose('hydrationPct', value, source))
+    collectPercentage(normalizedText, /(?:idratazione|acqua)\s+(?:al|all|a|di)?\s*(?:circa\s*)?(__NUMBER__)\s*%?/g, (value, source) => propose('hydrationPct', value, source))
+    collectPercentage(normalizedText, /impasto\s+(?:al|all|a)\s*(__NUMBER__)\s*%/g, (value, source) => propose('hydrationPct', value, source))
     collectPercentage(normalizedText, /(__NUMBER__)\s*%\s*(?:di\s+)?(?:idratazione|acqua)/g, (value, source) => propose('hydrationPct', value, source))
-    collectPercentage(normalizedText, /(?:sale|salatura)\s+(?:al|a|di)?\s*(__NUMBER__)\s*%?/g, (value, source) => propose('saltPct', value, source))
+    collectPercentage(normalizedText, /(?:fai|porta|metti)\s+(__NUMBER__)\s*%/g, (value, source) => {
+      if (/\b(?:acqua|idratazione)\b/.test(normalizedText)) propose('hydrationPct', value, source)
+    })
+    collectPercentage(normalizedText, /(?:sale|salatura)\s+(?:al|all|a|di)?\s*(__NUMBER__)\s*%?/g, (value, source) => propose('saltPct', value, source))
     collectPercentage(normalizedText, /(__NUMBER__)\s*%\s*(?:di\s+)?(?:sale|salatura)/g, (value, source) => propose('saltPct', value, source))
-    collectPercentage(normalizedText, /(?:olio|olio evo)\s+(?:al|a|di)?\s*(__NUMBER__)\s*%?/g, (value, source) => propose('oilPct', value, source))
+    collectPercentage(normalizedText, /(?:olio|olio evo)\s+(?:al|all|a|di)?\s*(__NUMBER__)\s*%?/g, (value, source) => propose('oilPct', value, source))
     collectPercentage(normalizedText, /(__NUMBER__)\s*%\s*(?:di\s+)?olio(?:\s+evo)?/g, (value, source) => propose('oilPct', value, source))
+    collectPercentage(normalizedText, /(?:olio|olio evo)[,;]?\s+tipo\s+(__NUMBER__)\s*%/g, (value, source) => propose('oilPct', value, source))
+    const continuedPercentage = new RegExp(`\\b(?:poi|anzi|ma anche|oppure)\\s+(?:(?:al|a|il|lo)\\s+)?(${NUMBER_TOKEN})\\s*%?\\b`, 'g')
+    for (const match of normalizedText.matchAll(continuedPercentage)) {
+      const preceding = normalizedText.slice(0, match.index)
+      const previousField = [...preceding.matchAll(/\b(idratazione|acqua|sale|salatura|olio)\b/g)].at(-1)?.[1]
+      const field = previousField === 'idratazione' || previousField === 'acqua' ? 'hydrationPct'
+        : previousField === 'sale' || previousField === 'salatura' ? 'saltPct'
+          : previousField === 'olio' ? 'oilPct' : undefined
+      const value = numberValue(match[1])
+      if (field && value !== undefined) propose(field, value, match[0])
+    }
 
     const yeastType = parseYeastType(normalizedText)
     if (yeastType) propose('yeastType', yeastType.value, yeastType.source)
@@ -85,24 +120,36 @@ export class DeterministicItalianInterpreter implements NaturalLanguageInterpret
       }
       propose('yeastPct', grams / flourWeight * 100, match[0])
     }
-    collectPercentage(normalizedText, /(?:lievito\s+(?:al|a|di)?\s*|__NUMBER__\s*%\s*(?:di\s+)?lievito)/g, (value, source) => propose('yeastPct', value, source))
+    collectPercentage(normalizedText, /(?:lievito\s+(?:al|a|di)?\s*|__NUMBER__\s*(?:%|per\s+cento)\s*(?:di\s+)?lievito)/g, (value, source) => propose('yeastPct', value, source))
 
     collectTemperature(normalizedText, /(?:temperatura\s+ambiente|ambiente(?:\s+(?:a|di))?|in\s+cucina(?:\s+a)?)\s*(?:di|a|:)?\s*__NUMBER__\s*(?:°\s*c|gradi(?:\s*celsius)?|celsius)?/g, (value, source) => propose('fermentation.ambientTemperatureC', value, source))
     collectTemperature(normalizedText, /(?:temperatura\s+(?:del\s+)?(?:frigo|frigorifero)|frigo(?:rifero)?(?:\s+(?:a|di))?)\s*(?:di|a|:)?\s*__NUMBER__\s*(?:°\s*c|gradi(?:\s*celsius)?|celsius)?/g, (value, source) => propose('fermentation.refrigeratorTemperatureC', value, source))
     collectTemperature(normalizedText, /(?:temperatura\s+(?:dell?\s+)?impasto|impasto\s+misurato)\s*(?:di|a|:)?\s*__NUMBER__\s*(?:°\s*c|gradi(?:\s*celsius)?|celsius)?/g, (value, source) => propose('fermentation.measuredDoughTemperatureC', value, source))
 
+    collectTemperature(normalizedText, /(?:tieni|mantieni|porta)\s+(?:l\s+)?impasto\s+(?:a|di)\s*__NUMBER__\s*(?:°\s*c|gradi(?:\s+celsius)?|celsius)/g, (value, source) => propose('fermentation.ambientTemperatureC', value, source))
+    collectTemperature(normalizedText, /temperatura\s+misurata\s+(?:dell?\s+)?impasto\s+(?:e\s+)?__NUMBER__\s*(?:°\s*c|gradi(?:\s+celsius)?|celsius)/g, (value, source) => propose('fermentation.measuredDoughTemperatureC', value, source))
+    const measuredDoughTemperaturePattern = new RegExp(`temperatura\\s+misurata\\s+dell?\\s+impasto\\s+e\\s+(${NUMBER_TOKEN})\\s*(?:°\\s*c)?`, 'g')
+    for (const match of normalizedText.matchAll(measuredDoughTemperaturePattern)) {
+      const value = numberValue(match[1])
+      if (value !== undefined) propose('fermentation.measuredDoughTemperatureC', value, match[0])
+    }
+    collectTemperature(normalizedText, /temperatura\s+dell?\s+impasto\s+misurata\s+(?:e\s+)?__NUMBER__\s*(?:°\s*c|gradi(?:\s+celsius)?|celsius)/g, (value, source) => propose('fermentation.measuredDoughTemperatureC', value, source))
     for (const match of normalizedText.matchAll(new RegExp(`(?:(?:lievitazione|fermentazione)(?:\\s+(?:di|da))?\\s+)?(${NUMBER_TOKEN})\\s*(ore|ora|giorni|giorno|minuti?|min)\\b`, 'g'))) {
+      if (/\b(?:tra|fra)\s+$/.test(normalizedText.slice(0, match.index))) continue
       const value = numberValue(match[1])
       if (value !== undefined) propose('fermentation.totalDurationMinutes', value * (match[2].startsWith('giorn') ? 1440 : match[2].startsWith('or') ? 60 : 1), match[0])
     }
+    if (/\b(?:un|uno) giorno e mezzo\b/.test(normalizedText)) {
+      proposals.delete('fermentation.totalDurationMinutes')
+      ambiguities.push({ field: 'fermentation.totalDurationMinutes', question: 'Con “un giorno e mezzo” intendi 36 ore? Conferma la durata prima di aggiornare il piano.' })
+    }
 
-    const strategy = parseStrategy(normalizedText)
-    if (strategy) propose('fermentation.strategy', strategy.value, strategy.source)
+    for (const strategy of parseStrategies(normalizedText)) propose('fermentation.strategy', strategy.value, strategy.source)
 
     const availability = parseAvailability(normalizedText, context.currentConfiguration.fermentation.availability)
     if (availability) propose('fermentation.availability', availability.value, availability.source)
 
-    if (/\b(?:con\s+)?(?:(?:le|la)\s+)?farin(?:a|e)\s+(?:che\s+)?ho\s+(?:in\s+)?dispensa\b|\bsolo\s+(?:(?:le|la)\s+)?farin(?:a|e)\s+(?:della\s+)?dispensa\b|\bsolo\s+farine\s+disponibili\b/.test(normalizedText)) {
+    if (/\b(?:con\s+)?(?:(?:le|la)\s+)?farin(?:a|e)\s+(?:che\s+)?ho\s+(?:in\s+)?dispensa\b|\bsolo\s+(?:(?:le|la)\s+)?farin(?:a|e)\s+(?:della\s+)?dispensa\b|\bsolo\s+farine\s+(?:disponibili|presenti)\b/.test(normalizedText)) {
       usePantryOnly = true
       recognized = true
       entities.push({ field: 'usePantryOnly', value: true, sourceText: text, certainty: 'explicit' })
@@ -113,7 +160,8 @@ export class DeterministicItalianInterpreter implements NaturalLanguageInterpret
     }
     const pantryConstraintActive = usePantryOnly ?? context.pantryOnly === true
 
-    const flourRequests = parseFlourMentions(normalizedText)
+    const genericFlourRequest = /\b(?:farina forte|farina blu|farina qualsiasi|scegli tu una farina|completa la miscela|solo farine presenti in dispensa|solo farine della dispensa)\b/.test(normalizedText)
+    const flourRequests = genericFlourRequest ? [] : parseFlourMentions(normalizedText)
     const resolvedFlours = flourRequests.map((request) => resolveFlour(request.name, context.flours))
     for (let index = 0; index < flourRequests.length; index += 1) {
       const request = flourRequests[index]
@@ -138,6 +186,13 @@ export class DeterministicItalianInterpreter implements NaturalLanguageInterpret
         continue
       }
       propose('flourBlend.request', { flourId: flour.id, percentage: request.percentage }, request.source)
+    }
+    if (genericFlourRequest && !ambiguities.some(({ field }) => field === 'flourBlend')) {
+      ambiguities.push({ field: 'flourBlend', question: 'Quale farina del catalogo vuoi usare? Indica marca e prodotto, oppure scegli una delle farine disponibili.' })
+      recognized = true
+      if (/\bfarina blu\b/.test(normalizedText)) {
+        unsupportedRequests.push({ text, explanation: '“Farina blu” non identifica un prodotto verificabile nel catalogo.', suggestion: 'Scegli una farina dal catalogo o indica marca e nome del prodotto.' })
+      }
     }
 
     const dateTime = parseBakingDateTime(normalizedText, context)
@@ -235,7 +290,10 @@ export class DeterministicItalianInterpreter implements NaturalLanguageInterpret
     if (validationErrors.length === 0 && Object.keys(patch).length) {
       const validation = validateRecipePatch(context.currentConfiguration, patch, context.flours)
       if (validation.ok) {
-        if (typeof patch.ballCount === 'number' && !Number.isInteger(patch.ballCount)) validationErrors.push({ field: 'ballCount', message: 'Il numero di panetti deve essere intero.' })
+        const changesBakeAnchor = patch.fermentation?.bakingAt !== undefined || patch.fermentation?.totalDurationMinutes !== undefined
+        if (changesBakeAnchor && Date.parse(validation.configuration.fermentation.plannedStartAt) < context.now.getTime()) {
+          ambiguities.push({ field: 'fermentation.plannedStartAt', question: 'Con la durata attuale, la preparazione dovrebbe iniziare nel passato. Vuoi ridurre la durata della fermentazione o scegliere un orario di cottura più tardi?' })
+        } else if (typeof patch.ballCount === 'number' && !Number.isInteger(patch.ballCount)) validationErrors.push({ field: 'ballCount', message: 'Il numero di panetti deve essere intero.' })
         else if (typeof patch.ballWeight === 'number' && !Number.isInteger(patch.ballWeight)) validationErrors.push({ field: 'ballWeight', message: 'Il peso del panetto deve essere espresso in grammi interi.' })
         else if (typeof patch.totalDoughWeight === 'number' && !Number.isInteger(patch.totalDoughWeight)) validationErrors.push({ field: 'totalDoughWeight', message: 'Il peso totale deve essere espresso in grammi interi.' })
         else if (conflictingFields.length === 0) proposedConfiguration = validation.configuration
@@ -243,7 +301,9 @@ export class DeterministicItalianInterpreter implements NaturalLanguageInterpret
     }
 
     if (!recognized && !ambiguities.length) {
-      unsupportedRequests.push(makeUnsupportedRequest(text))
+      const clarification = inferMissingClarification(normalizedText)
+      if (clarification) ambiguities.push(clarification)
+      else unsupportedRequests.push(makeUnsupportedRequest(text))
     } else if (flourRequests.length && resolvedFlours.every((matches) => matches.length === 0)) {
       unsupportedRequests.push({ text, explanation: 'Il prodotto indicato non corrisponde a una scheda del catalogo disponibile.', suggestion: 'Prova con la marca e il nome esatto riportati nel catalogo farine.' })
     }
@@ -301,26 +361,40 @@ function calculateFlourWeight(configuration: RecipeConfiguration): number | null
   try { return calculateDough(toDoughInput(configuration)).flourWeight } catch { return null }
 }
 
-function parseStrategy(text: string): { value: FermentationStrategy; source: string } | undefined {
-  if (/\b(?:tutta|tutto)\s+(?:a\s+)?temperatura ambiente\b|\blievitazione\s+ambientale\b/.test(text)) return { value: 'room-temperature', source: 'temperatura ambiente' }
-  if (/\b(?:ambiente\s*(?:\+|e)\s*frigo|combinata|combinato)\b/.test(text)) return { value: 'combined', source: 'ambiente e frigorifero' }
-  if (/\b(?:prevalentemente\s+(?:in\s+)?(?:frigorifero|frigo)|(?:lievitazione|fermentazione|maturazione)(?:\s+di\s+\d+(?:[.,]\d+)?\s+(?:ore|giorni?))?\s+(?:tutta\s+)?in\s+(?:frigorifero|frigo)|\d+(?:[.,]\d+)?\s+(?:ore|giorni?)\s+in\s+(?:frigorifero|frigo)|solo\s+frigo)\b/.test(text)) return { value: 'refrigerated', source: 'frigorifero' }
-  if (/\bpiano\s+personalizzato\b/.test(text)) return { value: 'custom', source: 'piano personalizzato' }
-  return undefined
+function parseStrategies(text: string): Array<{ value: FermentationStrategy; source: string }> {
+  const strategies: Array<{ value: FermentationStrategy; source: string }> = []
+  if (/\b(?:tutta|tutto)\s+(?:a\s+)?temperatura ambiente\b|\btemperatura ambiente\b|\blievitazione\s+ambientale\b/.test(text)) {
+    strategies.push({ value: 'room-temperature', source: 'temperatura ambiente' })
+  }
+  if (/\b(?:ambiente\s*(?:\+|e)\s*frigo|combinata|combinato)\b/.test(text)) {
+    strategies.push({ value: 'combined', source: 'ambiente e frigorifero' })
+  }
+  if (/\b(?:refrigerat[oa]s?|notte\s+(?:in\s+)?(?:frigorifero|frigo)|prevalentemente\s+(?:in\s+)?(?:frigorifero|frigo)|(?:lievitazione|fermentazione|maturazione)(?:\s+di\s+\d+(?:[.,]\d+)?\s+(?:ore|giorni?))?\s+(?:tutta\s+)?in\s+(?:frigorifero|frigo)|\d+(?:[.,]\d+)?\s+(?:ore|giorni?)\s+in\s+(?:frigorifero|frigo)|solo\s+frigo)\b/.test(text)) {
+    strategies.push({ value: 'refrigerated', source: 'frigorifero' })
+  }
+  if (/\bpiano\s+personalizzato\b/.test(text)) strategies.push({ value: 'custom', source: 'piano personalizzato' })
+  return [...new Map(strategies.map((strategy) => [strategy.value, strategy])).values()]
 }
 
 function parseAvailability(text: string, current: RecipeConfiguration['fermentation']['availability']): { value: RecipeConfiguration['fermentation']['availability']; source: string } | undefined {
-  const clock = '(\\d{1,2})(?::(\\d{2}))?'
+  if (/\b(?:non ci sono|nessuna|nessun) fasce? orarie? da evitare\b/.test(text)) {
+    return { value: { ...current, avoidRestHours: false }, source: 'nessuna fascia oraria da evitare' }
+  }
+  const clock = `(mezzanotte|${NUMBER_TOKEN}|\\d{1,2})(?::(\\d{2}))?`
   const range = new RegExp(`(?:tra|dalle)\\s+(?:le\\s+)?${clock}\\s+(?:e|alle)\\s+(?:le\\s+)?${clock}`)
   const match = text.match(range)
-  if (match && /\b(?:staglio|lavorare|lavoro|impastare|indisponibile|non posso|evita|senza)\b/.test(text)) {
-    const start = formatClock(Number(match[1]), Number(match[2] ?? 0))
-    const end = formatClock(Number(match[3]), Number(match[4] ?? 0))
+  if (match && /\b(?:staglio|lavorare|lavoro|lavorazioni|lavorazione|impastare|indisponibile|non posso|evita|senza|fuori casa|pianificare)\b/.test(text)) {
+    const start = formatClock(clockValue(match[1]), Number(match[2] ?? 0))
+    const end = formatClock(clockValue(match[3]), Number(match[4] ?? 0))
     return { value: { avoidRestHours: true, unavailableStart: start, unavailableEnd: end }, source: match[0] }
   }
   const after = text.match(new RegExp(`(?:senza\\s+(?:lavorare|fare\\s+operazioni)\\s+dopo|non\\s+(?:posso|voglio)\\s+(?:lavorare|fare\\s+operazioni)\\s+dopo)\\s+(?:le\\s+)?${clock}`))
   if (after) return { value: { ...current, avoidRestHours: true, unavailableStart: formatClock(Number(after[1]), Number(after[2] ?? 0)) }, source: after[0] }
   return undefined
+}
+
+function clockValue(value: string): number {
+  return value === 'mezzanotte' ? 0 : numberValue(value) ?? Number(value)
 }
 
 function formatClock(hour: number, minute: number) {
@@ -337,6 +411,11 @@ function parseFlourMentions(text: string): Array<{ name: string; percentage?: nu
     const name = cleanFlourMention(match[2])
     if (name) requests.push({ name, percentage, source: match[0] })
   }
+  const halfPattern = new RegExp(`\\bmeta\\s+([\\p{L}][\\p{L}0-9 ]*?)${stop}`, 'gu')
+  for (const match of text.matchAll(halfPattern)) {
+    const name = cleanFlourMention(match[1])
+    if (name) requests.push({ name, percentage: 50, source: match[0] })
+  }
   if (!requests.length && !/\bfarine?\s+(?:che\s+)?ho\s+(?:in\s+)?dispensa\b|\bsolo\s+farine\s+(?:disponibili|in\s+dispensa)\b/.test(text)) {
     const named = new RegExp(`\\b(?:usa|utilizza|scegli|metti|aggiungi)\\s+(?:il\\s+|la\\s+|una\\s+)?(?:farina\\s+)?([\\p{L}][\\p{L}0-9 ]*?)${stop}`, 'gu')
     for (const match of text.matchAll(named)) {
@@ -347,6 +426,25 @@ function parseFlourMentions(text: string): Array<{ name: string; percentage?: nu
     }
   }
   return requests
+}
+
+function inferMissingClarification(text: string): NaturalLanguageAmbiguity | undefined {
+  if (/\b(?:molto idratat[oa]|piu morbida|piu idratat[oa]|un filo piu morbida)\b/.test(text)) {
+    return { field: 'hydrationPct', question: 'Quale percentuale di idratazione vuoi impostare?' }
+  }
+  if (/\b(?:dose piccola|impasto piccolo|porzione piccola)\b/.test(text)) {
+    return { field: 'doughWeight', question: 'Quanti panetti e di quale peso, oppure quale peso totale desideri?' }
+  }
+  if (/\b(?:poco lievito|meno lievito|poco piu lievito|mezzo grammo)\b/.test(text)) {
+    return { field: 'yeastPct', question: 'Quale quantità o percentuale di lievito vuoi usare?' }
+  }
+  if (/\b(?:farina forte|farina qualsiasi|scegli tu una farina)\b/.test(text)) {
+    return { field: 'flourBlend', question: 'Quale farina del catalogo vuoi usare? Indica marca e prodotto.' }
+  }
+  if (/\b(?:anzi|come prima|stessa ricetta|portala|portalo|togli il vincolo)\b/.test(text)) {
+    return { field: 'context', question: 'Mi manca il riferimento della richiesta precedente. Quale parametro o vincolo vuoi modificare?' }
+  }
+  return undefined
 }
 
 function cleanFlourMention(value: string) {
@@ -392,25 +490,40 @@ function buildFlourBlend(current: FlourBlendItem[], requested: FlourBlendItem[])
 function parseBakingDateTime(text: string, context: NaturalLanguageContext): { value?: string; source: string; error?: string } {
   const timeMatches = [...text.matchAll(/\b(?:alle|all|a|ore)\s+(\d{1,2})(?::([0-5]\d)|\.([0-5]\d))?\b(?!\s*(?:gradi|celsius))/g)]
     .filter((match) => Number(match[1]) <= 23)
-  const timeMatch = timeMatches.at(-1)
-  const hasDate = /\b(?:oggi|domani|dopodomani|lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\/\d{4}\b/.test(text)
-  if (!timeMatch && !hasDate) return { source: '' }
+  const colloquialTime = text.match(/\balle\s+(otto|sette|sei|nove|dieci|undici|dodici)\s+e\s+mezza\b/)
+  if (timeMatches.length + Number(Boolean(colloquialTime)) > 1) return { source: text, error: 'Hai indicato più orari di cottura. Quale data e ora devo usare?' }
+  const timeMatch = timeMatches[0]
+  const colloquialHour = colloquialTime ? numberValue(colloquialTime[1]) : undefined
+  const requestedHour = colloquialHour === undefined ? undefined : /\bsera\b/.test(text) && colloquialHour < 12 ? colloquialHour + 12 : colloquialHour
+  const requestedMinute = colloquialTime ? 30 : undefined
+  const relativeDays = text.match(new RegExp(`\\b(?:tra|fra)\\s+(${NUMBER_TOKEN})\\s+giorni?\\b`))
+  const hasDate = Boolean(relativeDays) || /(?:oggi|domani|dopodomani|lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}/.test(text)
+  if (!timeMatch && !colloquialTime && !hasDate) return { source: '' }
+  if (!timeMatch && !colloquialTime && hasDate && /\b(?:ora di cena|orario di cena|ora della cena|per cena|a cena)\b/.test(text)) {
+    return { source: text, error: 'Per “ora di cena” posso usare le 20:00, ma non la imposto senza conferma. Va bene questo orario?' }
+  }
+  if (hasDate && !timeMatch && !colloquialTime) return { source: text, error: 'Hai indicato il giorno ma non l’orario di cottura. A che ora deve essere pronta?' }
   const baking = new Date(context.currentConfiguration.fermentation.bakingAt)
   const fallback = Number.isFinite(baking.getTime()) ? partsInZone(baking, context.timeZone) : partsInZone(context.now, context.timeZone)
   const today = partsInZone(context.now, context.timeZone)
   const target = hasDate ? resolveCalendarDate(text, today) : { year: fallback.year, month: fallback.month, day: fallback.day }
   if (!target) return { source: text, error: 'Non riesco a determinare la data. Indica una data completa oppure oggi, domani o un giorno della settimana.' }
-  const hour = timeMatch ? Number(timeMatch[1]) : fallback.hour
-  const minute = timeMatch ? Number(timeMatch[2] ?? timeMatch[3] ?? 0) : fallback.minute
+  const hour = timeMatch ? Number(timeMatch[1]) : requestedHour ?? fallback.hour
+  const minute = timeMatch ? Number(timeMatch[2] ?? timeMatch[3] ?? 0) : requestedMinute ?? fallback.minute
   if (hour > 23 || minute > 59) return { source: timeMatch?.[0] ?? text, error: 'L’orario deve essere compreso tra 00:00 e 23:59.' }
   const result = zonedDateTimeToIso({ ...target, hour, minute }, context.timeZone)
   if (result.error) return { source: timeMatch?.[0] ?? text, error: result.error }
-  return { value: result.iso, source: [hasDate ? text.match(/oggi|domani|dopodomani|lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}/)?.[0] : '', timeMatch?.[0] ?? 'ora attuale'].filter(Boolean).join(' ') }
+  return { value: result.iso, source: [hasDate ? relativeDays?.[0] ?? text.match(/oggi|domani|dopodomani|lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}/)?.[0] : '', timeMatch?.[0] ?? colloquialTime?.[0] ?? 'ora attuale'].filter(Boolean).join(' ') }
 }
 
 interface CalendarParts { year: number; month: number; day: number; hour: number; minute: number }
 
 function resolveCalendarDate(text: string, today: CalendarParts): Pick<CalendarParts, 'year' | 'month' | 'day'> | undefined {
+  const relativeDays = text.match(new RegExp(`\\b(?:tra|fra)\\s+(${NUMBER_TOKEN})\\s+giorni?\\b`))
+  if (relativeDays) {
+    const days = numberValue(relativeDays[1])
+    if (days !== undefined && days > 0 && days <= 365) return addCalendarDays(today, days)
+  }
   const iso = text.match(/\b(\d{4})-(\d{2})-(\d{2})\b/)
   const numeric = text.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/)
   if (iso) return checkedCalendarDate(Number(iso[1]), Number(iso[2]), Number(iso[3]))

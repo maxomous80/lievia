@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultDraft } from '../../data/defaults'
 import { OFFICIAL_FLOURS } from '../../data/officialFlours'
 import { createDefaultFermentationConfig } from '../fermentation/schedule'
+import { updateTotalDuration } from '../fermentation/schedule'
 import { calculateScenario, createRecipeConfiguration } from '../lab/scenarios'
 import { calculateDough } from '../../lib/calculator'
 import { toDoughInput } from '../lab/scenarios'
@@ -72,6 +73,34 @@ describe('interprete italiano deterministico', () => {
     expect(interpreter.interpret('Sposta la cottura a domenica alle 21.', context).patch.fermentation?.bakingAt).toBe('2026-10-25T20:00:00.000Z')
   })
 
+  it('risolve una data relativa di più giorni senza confonderla con la durata', () => {
+    const result = interpreter.interpret('Prova 48 ore in frigorifero a 5 gradi e cuoci tra tre giorni alle 20:30.', makeContext())
+    expect(result.patch.fermentation?.totalDurationMinutes).toBe(2880)
+    expect(result.patch.fermentation?.bakingAt).toBe('2026-10-27T19:30:00.000Z')
+    expect(result.ambiguities).toEqual([])
+    expect(result.proposedConfiguration).not.toBeNull()
+    expect(Date.parse(result.proposedConfiguration!.fermentation.plannedStartAt)).toBeGreaterThan(fixedNow.getTime())
+  })
+
+  it('chiede conferma per ora di cena senza perdere numero e peso delle pizze', () => {
+    const result = interpreter.interpret('Trova tu la combinazione migliore per avere 4 pizze da 250 grammi domani sera per ora di cena.', makeContext())
+    expect(result.patch.ballCount).toBe(4)
+    expect(result.patch.ballWeight).toBe(250)
+    expect(result.ambiguities.find(({ field }) => field === 'fermentation.bakingAt')?.question).toContain('20:00')
+    expect(result.proposedConfiguration).toBeNull()
+  })
+
+  it('non propone un piano che inizi nel passato quando la durata ereditata supera il tempo disponibile', () => {
+    const fermentation = updateTotalDuration(createDefaultFermentationConfig(fixedNow), 48 * 60)
+    const context = makeContext({
+      currentConfiguration: createRecipeConfiguration({ ...createDefaultDraft('past-start'), fermentation }, fermentation),
+    })
+    const result = interpreter.interpret('Cuoci domani alle 20:30.', context)
+    expect(result.patch.fermentation?.bakingAt).toBe('2026-10-25T19:30:00.000Z')
+    expect(result.ambiguities.find(({ field }) => field === 'fermentation.plannedStartAt')?.question).toContain('nel passato')
+    expect(result.proposedConfiguration).toBeNull()
+  })
+
   it('chiede chiarimenti per gli orari inesistenti o ripetuti nei cambi stagionali', () => {
     const context = makeContext({ now: new Date('2026-03-28T12:00:00.000Z') })
     const missingHour = interpreter.interpret('Sposta la cottura al 29/03/2026 alle 2:30.', context)
@@ -81,7 +110,11 @@ describe('interprete italiano deterministico', () => {
   })
 
   it('interpreta più parametri, durata e temperatura usando le API di pianificazione', () => {
-    const result = interpreter.interpret('Prova una lievitazione di 48 ore in frigorifero a 5 gradi.', makeContext())
+    const fermentation = createDefaultFermentationConfig(fixedNow)
+    const context = makeContext({
+      currentConfiguration: createRecipeConfiguration({ ...createDefaultDraft('future-bake'), fermentation: { ...fermentation, bakingAt: '2026-10-27T19:30:00.000Z' } }, fermentation),
+    })
+    const result = interpreter.interpret('Prova una lievitazione di 48 ore in frigorifero a 5 gradi.', context)
     expect(result.patch.fermentation?.totalDurationMinutes).toBe(2880)
     expect(result.patch.fermentation?.refrigeratorTemperatureC).toBe(5)
     expect(result.patch.fermentation?.strategy).toBe('refrigerated')
@@ -153,14 +186,14 @@ describe('interprete italiano deterministico', () => {
   })
 
   it('in un prompt combinato conserva ogni richiesta esplicita senza dedurre dati assenti', () => {
-    const result = interpreter.interpret('Voglio 6 panetti da 250 grammi al 70,5% di idratazione, 48 ore in frigorifero a 5 gradi e cottura domani alle 20:30.', makeContext())
+    const result = interpreter.interpret('Voglio 6 panetti da 250 grammi al 70,5% di idratazione, 48 ore in frigorifero a 5 gradi e cottura dopodomani alle 20:30.', makeContext())
     expect(result.patch.ballCount).toBe(6)
     expect(result.patch.ballWeight).toBe(250)
     expect(result.patch.hydrationPct).toBe(70.5)
     expect(result.patch.fermentation?.totalDurationMinutes).toBe(2880)
     expect(result.patch.fermentation?.strategy).toBe('refrigerated')
     expect(result.patch.fermentation?.refrigeratorTemperatureC).toBe(5)
-    expect(result.patch.fermentation?.bakingAt).toBe('2026-10-25T19:30:00.000Z')
+    expect(result.patch.fermentation?.bakingAt).toBe('2026-10-26T19:30:00.000Z')
     expect(result.ambiguities).toEqual([])
     expect(result.validationErrors).toEqual([])
     expect(result.proposedConfiguration?.saltPct).toBe(makeContext().currentConfiguration.saltPct)
@@ -188,6 +221,39 @@ describe('interprete italiano deterministico', () => {
     const approximate = interpreter.interpret('Idratazione circa 70%.', makeContext())
     expect(approximate.ambiguities.some(({ field }) => field === 'value')).toBe(true)
     expect(approximate.patch.hydrationPct).toBeUndefined()
+  })
+
+  it('chiede chiarimenti senza produrre proposte per riferimenti temporali o contestuali incompleti', () => {
+    const context = makeContext()
+    const dateOnly = interpreter.interpret('Cuoci domani.', context)
+    expect(dateOnly.ambiguities.some(({ field }) => field === 'fermentation.bakingAt')).toBe(true)
+    expect(dateOnly.patch.fermentation?.bakingAt).toBeUndefined()
+    expect(dateOnly.proposedConfiguration).toBeNull()
+
+    const conflictingTimes = interpreter.interpret('Cuoci domani alle 19 e domani alle 21.', context)
+    expect(conflictingTimes.ambiguities.some(({ field }) => field === 'fermentation.bakingAt')).toBe(true)
+    expect(conflictingTimes.patch.fermentation?.bakingAt).toBeUndefined()
+    expect(conflictingTimes.proposedConfiguration).toBeNull()
+
+    const followUp = interpreter.interpret('Anzi portala al 72%.', context)
+    expect(followUp.ambiguities.some(({ field }) => field === 'context')).toBe(true)
+    expect(followUp.patch.hydrationPct).toBeUndefined()
+    expect(followUp.proposedConfiguration).toBeNull()
+  })
+
+  it('estrae quantità colloquiali esplicite e non indovina descrittori vaghi di farina', () => {
+    const context = makeContext()
+    expect(interpreter.interpret('Fammi sei palline da 250.', context).patch).toMatchObject({ ballCount: 6, ballWeight: 250 })
+    expect(interpreter.interpret('Alza un filo l’acqua: fai 70%.', context).patch.hydrationPct).toBe(70)
+    expect(interpreter.interpret('Mettici un goccino d’olio, tipo 2%.', context).patch.oilPct).toBe(2)
+    expect(interpreter.interpret('Passa allo stile napoletano.', context).patch.style).toBe('napoletana')
+    const measuredTemperature = interpreter.interpret('La temperatura misurata dell’impasto è 24 °C.', context)
+    expect(measuredTemperature.patch.fermentation?.measuredDoughTemperatureC).toBe(24)
+
+    const vagueFlour = interpreter.interpret('Usa una farina forte.', context)
+    expect(vagueFlour.ambiguities.some(({ field }) => field === 'flourBlend')).toBe(true)
+    expect(vagueFlour.patch.flourBlend).toBeUndefined()
+    expect(vagueFlour.proposedConfiguration).toBeNull()
   })
 
   it('non dichiara comprensione per richieste fuori ambito', () => {

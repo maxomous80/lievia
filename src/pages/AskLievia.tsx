@@ -3,7 +3,7 @@ import { ArrowRight, Check, CircleHelp, FlaskConical, RotateCcw, Send, Undo2, Wh
 import { useNavigate } from 'react-router-dom'
 import { useAppData } from '../context/useAppData'
 import { createDefaultDraft, STYLE_OPTIONS } from '../data/defaults'
-import { createDefaultFermentationConfig, formatDuration, STRATEGY_LABELS } from '../domain/fermentation/schedule'
+import { createDefaultFermentationConfig, formatDuration, reanchorExpiredSchedule, STRATEGY_LABELS } from '../domain/fermentation/schedule'
 import { calculateScenario, createRecipeConfiguration, recipeToConfiguration, type RecipeConfiguration } from '../domain/lab/scenarios'
 import { createConversation, resetConversation, submitConversationRequest, undoConversationChange } from '../domain/naturalLanguage/conversation'
 import { deterministicItalianInterpreter } from '../domain/naturalLanguage/deterministicItalianInterpreter'
@@ -11,7 +11,7 @@ import type { NaturalLanguageChoice } from '../domain/naturalLanguage/types'
 
 const examples = [
   'Voglio fare 6 panetti da 250 grammi, idratazione 70%.',
-  'Prova 48 ore in frigorifero a 5 gradi e cuoci domani alle 20:30.',
+  'Prova 48 ore in frigorifero a 5 gradi e cuoci tra tre giorni alle 20:30.',
   'Usa il 30% di Caputo Nuvola e completa con la farina che ho in dispensa.',
 ]
 const grams = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 })
@@ -25,10 +25,16 @@ const fieldLabels: Record<string, string> = {
   'fermentation.availability': 'Disponibilità',
 }
 
-function configurationFromRecipe(recipe: Parameters<typeof recipeToConfiguration>[0] | undefined): RecipeConfiguration {
-  const fermentation = createDefaultFermentationConfig(new Date())
-  return recipe ? recipeToConfiguration(recipe, fermentation)
-    : createRecipeConfiguration({ ...createDefaultDraft(), name: 'Nuova proposta' }, fermentation)
+function configurationFromRecipe(recipe: Parameters<typeof recipeToConfiguration>[0] | undefined): { configuration: RecipeConfiguration; scheduleRefreshed: boolean } {
+  const now = new Date()
+  const fermentation = createDefaultFermentationConfig(now)
+  if (!recipe) return { configuration: createRecipeConfiguration({ ...createDefaultDraft(), name: 'Nuova proposta' }, fermentation), scheduleRefreshed: false }
+  const configuration = recipeToConfiguration(recipe, fermentation)
+  const refreshedFermentation = reanchorExpiredSchedule(configuration.fermentation, now, fermentation.bakingAt)
+  return {
+    configuration: { ...configuration, fermentation: refreshedFermentation },
+    scheduleRefreshed: refreshedFermentation !== configuration.fermentation,
+  }
 }
 
 function fieldValue(configuration: RecipeConfiguration, field: string, flours: ReturnType<typeof useAppData>['flourCatalog']): string {
@@ -55,11 +61,12 @@ function fieldValue(configuration: RecipeConfiguration, field: string, flours: R
 export function AskLievia() {
   const { recipes, flourCatalog, pantryEntries } = useAppData()
   const navigate = useNavigate()
+  const [initialLoad] = useState(() => configurationFromRecipe(recipes[0]))
   const [selectedRecipeId, setSelectedRecipeId] = useState(recipes[0]?.id ?? '')
-  const [configuration, setConfiguration] = useState(() => configurationFromRecipe(recipes[0]))
+  const [configuration, setConfiguration] = useState(initialLoad.configuration)
   const [conversation, setConversation] = useState(() => createConversation(configuration))
   const [request, setRequest] = useState('')
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(initialLoad.scheduleRefreshed ? 'La data di fermentazione salvata era trascorsa: ho spostato il piano in avanti mantenendo durata e fasi. La ricetta salvata non è stata modificata.' : '')
   const [timeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Rome')
   const preview = useMemo(() => calculateScenario('chiedi-proposta', 'Proposta conversazionale', conversation.configuration, flourCatalog, pantryEntries), [conversation.configuration, flourCatalog, pantryEntries])
   const changed = conversation.undoStack.length > 0 && JSON.stringify(conversation.configuration) !== JSON.stringify(conversation.baseline)
@@ -85,11 +92,14 @@ export function AskLievia() {
 
   function changeBaseline(recipeId: string) {
     const recipe = recipes.find(({ id }) => id === recipeId)
-    const next = configurationFromRecipe(recipe)
+    const loaded = configurationFromRecipe(recipe)
+    const next = loaded.configuration
     setSelectedRecipeId(recipeId)
     setConfiguration(next)
     setConversation(createConversation(next))
-    setNotice('La proposta è ripartita dai valori della ricetta scelta.')
+    setNotice(loaded.scheduleRefreshed
+      ? 'La data di fermentazione salvata era trascorsa: ho spostato il piano in avanti mantenendo durata e fasi. La ricetta salvata non è stata modificata.'
+      : 'La proposta è ripartita dai valori della ricetta scelta.')
   }
 
   function confirmInLab() {
@@ -140,7 +150,7 @@ export function AskLievia() {
 
           {preview.dough ? <>
             <section className="ask-dough-result"><div className="ask-result-title"><h3>Dosi aggiornate</h3><strong>{grams.format(preview.dough.totalDoughWeight)} g</strong></div><p>{conversation.configuration.useTotalWeight ? 'Peso totale richiesto' : `${conversation.configuration.ballCount} panetti da ${grams.format(conversation.configuration.ballWeight)} g`}</p><dl>{preview.dough.flourQuantities.map((item) => <div key={item.flourId}><dt>{flourCatalog.find(({ id }) => id === item.flourId)?.name ?? 'Farina non disponibile'}</dt><dd>{grams.format(item.weight)} g · {grams.format(item.percentage)}%</dd></div>)}{[{ label: 'Farina totale', amount: preview.dough.flourWeight }, { label: 'Acqua', amount: preview.dough.waterWeight }, { label: 'Sale', amount: preview.dough.saltWeight }, { label: 'Olio', amount: preview.dough.oilWeight }, { label: 'Lievito', amount: preview.dough.yeastWeight }, { label: 'Malto', amount: preview.dough.maltWeight }, { label: 'Zucchero', amount: preview.dough.sugarWeight }].filter(({ amount }) => amount > 0).map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{grams.format(item.amount)} g</dd></div>)}</dl></section>
-            <section className="ask-schedule"><h3>Piano di fermentazione</h3><p className={preview.schedule.feasible ? 'lab-schedule-ok' : 'lab-schedule-conflict'} role={preview.schedule.feasible ? 'status' : 'alert'}>{preview.schedule.validation.status}</p><p>{STRATEGY_LABELS[conversation.configuration.fermentation.strategy]} · {formatDuration(conversation.configuration.fermentation.totalDurationMinutes)}</p>{preview.schedule.operations.map((operation) => <div key={operation.phaseId}><span>{operation.label}</span><strong>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(operation.startAt))}–{new Intl.DateTimeFormat('it-IT', { timeStyle: 'short' }).format(new Date(operation.endAt))}</strong></div>)}<div><span>Preparazione</span><strong>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(preview.schedule.current.plannedStartAt))}</strong></div><div><span>Cottura</span><strong>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(preview.schedule.current.bakingAt))}</strong></div>{preview.schedule.conflicts.map((conflict) => <small className="lab-schedule-conflict" role="alert" key={conflict}>{conflict}</small>)}{preview.schedule.validation.uncertainty.map((warning) => <small key={warning}>{warning}</small>)}{preview.warnings.slice(0, 2).map((warning) => <small key={warning}>{warning}</small>)}</section>
+            <section className="ask-schedule"><h3>Piano di fermentazione</h3><p className={preview.schedule.feasible ? 'lab-schedule-ok' : 'lab-schedule-conflict'} role={preview.schedule.feasible ? 'status' : 'alert'}>{preview.schedule.validation.status}</p><p>{STRATEGY_LABELS[conversation.configuration.fermentation.strategy]} · {formatDuration(conversation.configuration.fermentation.totalDurationMinutes)}</p><div><span>Preparazione</span><strong>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(preview.schedule.current.plannedStartAt))}</strong></div>{preview.schedule.operations.map((operation) => <div key={operation.phaseId}><span>{operation.label}</span><strong>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(operation.startAt))}–{new Intl.DateTimeFormat('it-IT', { timeStyle: 'short' }).format(new Date(operation.endAt))}</strong></div>)}<div><span>Cottura</span><strong>{new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(preview.schedule.current.bakingAt))}</strong></div>{preview.schedule.conflicts.map((conflict) => <small className="lab-schedule-conflict" role="alert" key={conflict}>{conflict}</small>)}{preview.schedule.validation.uncertainty.map((warning) => <small key={warning}>{warning}</small>)}{preview.warnings.slice(0, 2).map((warning) => <small key={warning}>{warning}</small>)}</section>
           </> : <p className="ask-error">{preview.calculationError ?? 'Non riesco a calcolare questa proposta.'}</p>}
 
           <div className="ask-actions"><button className="button button-outline" type="button" disabled={!conversation.undoStack.length} onClick={() => setConversation(undoConversationChange(conversation))}><Undo2 size={15} /> Annulla modifica</button><button className="button button-outline" type="button" disabled={!changed} onClick={() => { setConversation(resetConversation(conversation)); setNotice('Proposta ripristinata alla ricetta di partenza.') }}><RotateCcw size={15} /> Ripristina base</button></div>

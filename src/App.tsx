@@ -7,10 +7,13 @@ import { FlourLibrary } from './pages/FlourLibrary'
 import { RecipeBook } from './pages/RecipeBook'
 import { DoughBuilder } from './pages/DoughBuilder'
 import { Feedback } from './pages/Feedback'
+import { isLocalSLMBenchmarkEnabled } from './domain/naturalLanguage/slmFeatureFlag'
 import './App.css'
 
 const LieviaLab = lazy(() => import('./pages/LieviaLab').then((module) => ({ default: module.LieviaLab })))
 const AskLievia = lazy(() => import('./pages/AskLievia').then((module) => ({ default: module.AskLievia })))
+const LocalSLMBenchmark = lazy(() => import('./pages/LocalSLMBenchmark').then((module) => ({ default: module.LocalSLMBenchmark })))
+const localSLMBenchmarkEnabled = isLocalSLMBenchmarkEnabled(import.meta.env.VITE_ENABLE_LOCAL_SLM_BENCHMARK)
 
 const navigation = [
   { to: '/', label: 'Panoramica', icon: Home, end: true },
@@ -60,6 +63,7 @@ function AppShell() {
             <Route path="/lab" element={<Suspense fallback={<p className="lab-loading">Apro Lievia Lab…</p>}><LieviaLab /></Suspense>} />
             <Route path="/ricette" element={<RecipeBook />} />
             <Route path="/chiedi" element={<Suspense fallback={<p className="lab-loading">Apro l’assistente…</p>}><AskLievia /></Suspense>} />
+            {localSLMBenchmarkEnabled && <Route path="/benchmark-slm" element={<Suspense fallback={<p className="lab-loading">Apro il benchmark locale…</p>}><LocalSLMBenchmark /></Suspense>} />}
             <Route path="/esiti" element={<Feedback />} />
           </Routes>
         </main>

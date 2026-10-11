@@ -96,6 +96,16 @@ export function setScheduleAnchor(
   }
 }
 
+export function reanchorExpiredSchedule(config: FermentationConfig, now: Date, preferredBakingAt: string): FermentationConfig {
+  if (Date.parse(config.plannedStartAt) >= now.getTime()) return config
+
+  let bakingAt = parseLocalDateTime(preferredBakingAt)
+  while (bakingAt.getTime() - config.totalDurationMinutes * 60_000 <= now.getTime()) {
+    bakingAt = addDays(bakingAt, 1)
+  }
+  return setScheduleAnchor(config, 'bake', bakingAt.toISOString())
+}
+
 export function updateTotalDuration(config: FermentationConfig, totalDurationMinutes: number): FermentationConfig {
   validateDuration(totalDurationMinutes)
   const baking = config.timeAnchor === 'bake'
